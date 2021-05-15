@@ -1,13 +1,24 @@
 
-function onClick(info, tab) {
+async function onClick(info, tab) {
+    const config = await GetConfig();
+    chrome.storage.local.set({ "togglJiraConfig": config });
+    
     chrome.scripting.executeScript({
         target: { tabId: tab.id },
         files: ['script.js']
     }, callback);
+}
 
+
+
+async function GetConfig() {
+    var response = await fetch("./config.json");
+    var data = await response.json();
+    return data;
 }
 
 function callback(data) {
+    console.log('callback data: ', data);
     if (data === undefined)
         return;
 

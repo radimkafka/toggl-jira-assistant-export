@@ -53,36 +53,31 @@ function getReport(data) {
             records.push({ ...item, recordCount: 1 });
         }
     });
-
+    records = records.map(a => ({ ...a, totalDuration: roundDuration(a.totalDuration) }));
+    
     let output = "Ticket No;Start Date;Timespent;Comment";
     records.forEach(a => {
         output += "\r\n" + stringifyWorklog(a);
     });
-    
+
     download('test.csv', output);
 }
 
-function updateRecord(workLog) {
-    const commentIndex = workLog.comment.search(";");
+function updateRecord(workLogItem) {
+    const commentIndex = workLogItem.comment.search(";");
     if (commentIndex > -1) {
-        const projNumber = workLog.comment.slice(0, commentIndex);
-        workLog.comment = workLog.comment.slice(commentIndex + 1, workLog.comment.length);
-        workLog.project = `${workLog.project}-${projNumber}`;
+        const projNumber = workLogItem.comment.slice(0, commentIndex);
+        workLogItem.comment = workLogItem.comment.slice(commentIndex + 1, workLogItem.comment.length);
+        workLogItem.project = `${workLogItem.project}-${projNumber}`;
     }
     else {
-        workLog.project = `${workLog.project}-${workLog.comment}`;
-        workLog.comment = "";
+        if (!!workLogItem.project) {
+            workLogItem.project = `${workLogItem.project}-${workLogItem.comment}`;
+            workLogItem.comment = "";
+        }
+        else
+            workLogItem.project = "NoProject"
     }
-
-    // const durationIndex = workLog.duration.search(":");
-    // if (durationIndex > -1) {
-    //     var hours = workLog.duration.slice(0, durationIndex);
-    //     var minutes = workLog.duration.slice(durationIndex + 1, workLog.duration.length);
-    //     workLog.totalDuration = Number(hours) * 60 + Number(minutes);
-    // }
-    // else {
-    //     workLog.totalDuration = Number(workLog.duration);
-    // }
 }
 
 function stringifyWorklog({ project, comment, totalDuration, date }) {
@@ -95,19 +90,31 @@ function stringifyWorklog({ project, comment, totalDuration, date }) {
     return `${project};${date};${hoursString}:${minutesString};${comment}`;
 }
 
-async function getDataAsync() {
-    const from = "2021-04-01";
-    const to = "2021-04-30";
+function getConfigFromStorage() {
+    return new Promise(function(resolve, reject) {
+        chrome.storage.local.get("togglJiraConfig", function(items) {            
+            resolve(items.togglJiraConfig);
+         })
+    });
+}
+
+async function getDataAsync() {    
+    const config = await getConfigFromStorage()
+    
+    return;
+    const from = "2021-05-01";
+    const to = "2021-05-31";
     let start = 1;
     let paging = 1;
-    let url = `https://track.toggl.com/reports/api/v2/details.json?workspace_id=3522757&start_date=${from}&end_date=${to}&start=3&order_by=date&order_dir=asc&date_format=MM/DD/YYYY&order_field=date&order_desc=false&since=${from}&until=${to}&page=3&user_agent=Toggl%20New%205.10.10&bars_count=31&subgrouping_ids=true&bookmark_token=`
+    let workspace_id = 3522757
+    let url = ""
 
     let totalCount = 0;
     let loadedData = 0;
 
     let records = [];
     do {
-        url = `https://track.toggl.com/reports/api/v2/details.json?workspace_id=3522757&start_date=${from}&end_date=${to}&start=${start}&order_by=date&order_dir=asc&date_format=MM/DD/YYYY&order_field=date&order_desc=false&since=${from}&until=${to}&page=${paging}&user_agent=Toggl%20New%205.10.10&bars_count=31&subgrouping_ids=true&bookmark_token=`
+        url = `https://track.toggl.com/reports/api/v2/details.json?workspace_id=${workspace_id}&start_date=${from}&end_date=${to}&start=3&order_by=date&order_dir=asc&date_format=MM/DD/YYYY&order_field=date&order_desc=false&since=${from}&until=${to}&page=3&user_agent=Toggl%20New%205.10.10&bars_count=31&subgrouping_ids=true&bookmark_token=`
         var response = await fetch(url);
         var data = await response.json();
         records = records.concat(data.data);
@@ -120,9 +127,29 @@ async function getDataAsync() {
     }
     while (totalCount > loadedData);
 
-    getReport(records.map(a => ({ project: a.project, comment: a.description, totalDuration: (a.dur / 60000).toFixed(0), date: new Date(a.start).toLocaleDateString() })));
+    getReport(records.map(a => ({ project: a.project, comment: a.description, totalDuration: Math.round((a.dur / 60000)), date: dateFormat(a.start) })));
+}
 
+function dateFormat(dateString) {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const day = date.getDate();
 
+    return `${year}-${month < 10 ? "0" : ""}${month}-${day < 10 ? "0" : ""}${day}`;
+}
+
+function roundDuration(worklogItemDuration) {
+    const modulo = worklogItemDuration % 5;
+    let add = 0;
+    if (modulo >= 3) {
+        add = 5 - modulo;
+    }
+    else {
+        add = -1 * modulo;
+    }
+    console.log(worklogItemDuration, worklogItemDuration + add);
+    return worklogItemDuration + add;
 }
 
 function getDomData() {
@@ -149,8 +176,8 @@ function getDomData() {
     }
 }
 
-(function () {
+(function () {    
     getDataAsync();
 
-    return [];
+    return "test103";
 })();
