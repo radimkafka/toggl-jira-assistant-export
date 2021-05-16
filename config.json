@@ -12,7 +12,7 @@
         },
         {
             "filename": "elx",
-            "restAs": "BEI-27",
+            "restAs": "",
             "includedProjects": [
                 "BEI",
                 "RED",

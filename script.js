@@ -58,12 +58,11 @@ function getDomData() {
     }
 }
 
-function processData(dataArgs, roundDuration) {
-    if (data === undefined)
-        return [];
-    
-    const data = dataArgs.map(a => ({ project: a.project, comment: a.description, totalDuration: Math.round((a.dur / 60000)), date: dateFormat(a.start) }))    
+function processData(data) {    
+    return data.map(a => ({ project: a.project, comment: a.description, totalDuration: Math.round((a.dur / 60000)), date: dateFormat(a.start) }))
+}
 
+function groupData(data, toRoundDuration) {
     const records = [];
     data.forEach(item => {
         updateRecord(item);
@@ -76,21 +75,25 @@ function processData(dataArgs, roundDuration) {
             records.push({ ...item, recordCount: 1 });
         }
     });
-    return roundDuration ? records.map(a => ({ ...a, totalDuration: roundDuration(a.totalDuration) })) : records;
+    return toRoundDuration ? records.map(a => ({ ...a, totalDuration: roundDuration(a.totalDuration) })) : records;
 }
 
 function createReports(data, filter) {
     //{ filename, restAs, includedProjects}   
     filter.forEach(a => {
-
+        var itemsForReport = data.filter(d => a.includedProjects.includes(d.projectName) || !!a.restAs)
+                                .map(d=>!!a.restAs?(a.includedProjects.includes(d.projectName)?d:{...d,project:a.restAs, description:"vyvoj PPL"}):d);
+        var content = getReportContent(itemsForReport);        
+        download(`${a.filename}.csv`, content);
     });
+}
+
+function getReportContent(data) {
     let output = "Ticket No;Start Date;Timespent;Comment";
     data.forEach(a => {
         output += "\r\n" + stringifyWorklog(a);
     });
-
-    download('test.csv', output);
-
+    return output;
 }
 
 function updateRecord(workLogItem) {
@@ -127,7 +130,7 @@ function stringifyWorklog({ project, comment, totalDuration, date }) {
 /*
 
 */
-function getConfigFromStorage() {
+function getConfigFromStorageAsync() {
     return new Promise(function (resolve, reject) {
         chrome.storage.local.get("togglJiraConfig", function (items) {
             resolve(items.togglJiraConfig);
@@ -180,7 +183,6 @@ function roundDuration(worklogItemDuration) {
     else {
         add = -1 * modulo;
     }
-    console.log(worklogItemDuration, worklogItemDuration + add);
     return worklogItemDuration + add;
 }
 
@@ -190,12 +192,11 @@ function getDateRange() {
     return [from, to];
 }
 
-(function () {
+(async function () {
     const [from, to] = getDateRange();
-
-    const config = await getConfigFromStorage();
-
-    const data = getDataAsync(from, to, config.workspaceId);
-    const processedData = processData(data, config.roundDuration);
-    createReports(processedData, config.filter);
+    const config = await getConfigFromStorageAsync();
+    const data = await getDataAsync(from, to, config.workspaceId);
+    const processedData = processData(data);
+    const groupedData = groupData(processedData, config.roundDuration);
+    createReports(groupedData, config.filter);
 })();
