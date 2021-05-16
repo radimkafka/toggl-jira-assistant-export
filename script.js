@@ -34,12 +34,35 @@ function getReportDom(data) {
     download('test.txt', output);
 }
 
-function getReport(data) {
-    if (data === undefined)
-        return;
+function getDomData() {
+    var elements = document.getElementsByClassName('DetailedReportContent__table');
+    if (elements.length > 0) {
+        const table = elements[0];
+        const body = table.children[1];
+        const items = body.children;
+        const records = [];
+        var project = "";
+        var comment = "";
+        var duration = "";
+        var date = "";
+        for (let index = 0; index < items.length; index++) {
+            const element = items[index];
+            project = element.getElementsByClassName("css-1q07lv6-NameContainer e1t0hi2n9")[0]?.children[0]?.textContent;
+            comment = element.getElementsByClassName("ebdwukj8 css-14l5gqu-TimeEntryDescription-DescriptionInput e10vqxue0")[0]?.textContent;
+            duration = element.getElementsByClassName("css-1xlwrd0-Highlighted e1ujoigz0")[0].textContent;
+            date = element.getElementsByClassName("DateTimeInput__startDate")[0].textContent;
+            records.push({ project, comment, duration, date });
+        }
 
-    // const items = data[0].result
-    // {project, comment, duration, date}[]
+        processData(records);
+    }
+}
+
+function processData(dataArgs, roundDuration) {
+    if (data === undefined)
+        return [];
+    
+    const data = dataArgs.map(a => ({ project: a.project, comment: a.description, totalDuration: Math.round((a.dur / 60000)), date: dateFormat(a.start) }))    
 
     const records = [];
     data.forEach(item => {
@@ -53,17 +76,25 @@ function getReport(data) {
             records.push({ ...item, recordCount: 1 });
         }
     });
-    records = records.map(a => ({ ...a, totalDuration: roundDuration(a.totalDuration) }));
-    
+    return roundDuration ? records.map(a => ({ ...a, totalDuration: roundDuration(a.totalDuration) })) : records;
+}
+
+function createReports(data, filter) {
+    //{ filename, restAs, includedProjects}   
+    filter.forEach(a => {
+
+    });
     let output = "Ticket No;Start Date;Timespent;Comment";
-    records.forEach(a => {
+    data.forEach(a => {
         output += "\r\n" + stringifyWorklog(a);
     });
 
     download('test.csv', output);
+
 }
 
 function updateRecord(workLogItem) {
+    // vše za středníkem je komentář
     const commentIndex = workLogItem.comment.search(";");
     if (commentIndex > -1) {
         const projNumber = workLogItem.comment.slice(0, commentIndex);
@@ -72,11 +103,14 @@ function updateRecord(workLogItem) {
     }
     else {
         if (!!workLogItem.project) {
+            workLogItem.projectName = workLogItem.project;
             workLogItem.project = `${workLogItem.project}-${workLogItem.comment}`;
             workLogItem.comment = "";
         }
-        else
-            workLogItem.project = "NoProject"
+        else {
+            workLogItem.projectName = "";
+            workLogItem.project = "NoProject";
+        }
     }
 }
 
@@ -90,23 +124,21 @@ function stringifyWorklog({ project, comment, totalDuration, date }) {
     return `${project};${date};${hoursString}:${minutesString};${comment}`;
 }
 
+/*
+
+*/
 function getConfigFromStorage() {
-    return new Promise(function(resolve, reject) {
-        chrome.storage.local.get("togglJiraConfig", function(items) {            
+    return new Promise(function (resolve, reject) {
+        chrome.storage.local.get("togglJiraConfig", function (items) {
             resolve(items.togglJiraConfig);
-         })
+        })
     });
 }
 
-async function getDataAsync() {    
-    const config = await getConfigFromStorage()
-    
-    return;
-    const from = "2021-05-01";
-    const to = "2021-05-31";
+async function getDataAsync(from, to, workspaceId) {
     let start = 1;
     let paging = 1;
-    let workspace_id = 3522757
+    let workspace_id = workspaceId;
     let url = ""
 
     let totalCount = 0;
@@ -114,7 +146,7 @@ async function getDataAsync() {
 
     let records = [];
     do {
-        url = `https://track.toggl.com/reports/api/v2/details.json?workspace_id=${workspace_id}&start_date=${from}&end_date=${to}&start=3&order_by=date&order_dir=asc&date_format=MM/DD/YYYY&order_field=date&order_desc=false&since=${from}&until=${to}&page=3&user_agent=Toggl%20New%205.10.10&bars_count=31&subgrouping_ids=true&bookmark_token=`
+        url = `https://track.toggl.com/reports/api/v2/details.json?workspace_id=${workspace_id}&start_date=${from}&end_date=${to}&start=${start}&order_by=date&order_dir=asc&date_format=MM/DD/YYYY&order_field=date&order_desc=false&since=${from}&until=${to}&page=${paging}&user_agent=Toggl%20New%205.10.10&bars_count=31&subgrouping_ids=true&bookmark_token=`
         var response = await fetch(url);
         var data = await response.json();
         records = records.concat(data.data);
@@ -127,7 +159,7 @@ async function getDataAsync() {
     }
     while (totalCount > loadedData);
 
-    getReport(records.map(a => ({ project: a.project, comment: a.description, totalDuration: Math.round((a.dur / 60000)), date: dateFormat(a.start) })));
+    return records;
 }
 
 function dateFormat(dateString) {
@@ -152,32 +184,18 @@ function roundDuration(worklogItemDuration) {
     return worklogItemDuration + add;
 }
 
-function getDomData() {
-    var elements = document.getElementsByClassName('DetailedReportContent__table');
-    if (elements.length > 0) {
-        const table = elements[0];
-        const body = table.children[1];
-        const items = body.children;
-        const records = [];
-        var project = "";
-        var comment = "";
-        var duration = "";
-        var date = "";
-        for (let index = 0; index < items.length; index++) {
-            const element = items[index];
-            project = element.getElementsByClassName("css-1q07lv6-NameContainer e1t0hi2n9")[0]?.children[0]?.textContent;
-            comment = element.getElementsByClassName("ebdwukj8 css-14l5gqu-TimeEntryDescription-DescriptionInput e10vqxue0")[0]?.textContent;
-            duration = element.getElementsByClassName("css-1xlwrd0-Highlighted e1ujoigz0")[0].textContent;
-            date = element.getElementsByClassName("DateTimeInput__startDate")[0].textContent;
-            records.push({ project, comment, duration, date });
-        }
-
-        getReport(records);
-    }
+function getDateRange() {
+    const from = "2021-05-01";
+    const to = "2021-05-31";
+    return [from, to];
 }
 
-(function () {    
-    getDataAsync();
+(function () {
+    const [from, to] = getDateRange();
 
-    return "test103";
+    const config = await getConfigFromStorage();
+
+    const data = getDataAsync(from, to, config.workspaceId);
+    const processedData = processData(data, config.roundDuration);
+    createReports(processedData, config.filter);
 })();

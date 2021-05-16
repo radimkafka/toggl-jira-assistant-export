@@ -1,3 +1,23 @@
 {
-    "test":"123"
+    "workspaceId": 3522757,
+    "roundDuration": true,
+    "filter": [
+        {
+            "filename": "PPL",
+            "restAs": "",
+            "includedProjects": [
+                "SPRJ",
+                "PBOX"
+            ]
+        },
+        {
+            "filename": "elx",
+            "restAs": "BEI-27",
+            "includedProjects": [
+                "BEI",
+                "RED",
+                "ESA"
+            ]
+        }
+    ]
 }
