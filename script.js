@@ -143,13 +143,15 @@ function getDateRange() {
     return [from, to];
 }
 
+function test123(){
+    console.log("aaaa");
+}
+
 (async function () {
     const [from, to] = getDateRange();
     const config = await getConfigFromStorageAsync();
     const data = await getDataAsync(from, to, config.workspaceId);
     const processedData = processData(data);
-    const groupedData = groupData(processedData, config.roundDuration);
-    console.log('groupedData:');
-    console.log(groupedData);
+    const groupedData = groupData(processedData, config.roundDuration);    
     createReports(groupedData, config.filter);
 })();
