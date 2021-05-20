@@ -6,73 +6,21 @@ function download(filename, text) {
     hiddenElement.click();
 }
 
-function getReportDom(data) {
-    if (data === undefined)
-        return;
-
-    // const items = data[0].result
-    // {project, comment, duration, date}[]
-
-    const records = [];
-    data.forEach(item => {
-        updateRecord(item);
-        let foundItem = records.find(a => a.project === item.project && a.date === item.date && a.comment === item.comment);
-        if (foundItem !== undefined) {
-            foundItem.totalDuration += item.totalDuration;
-            foundItem.recordCount += 1;
-        }
-        else {
-            records.push({ ...item, recordCount: 1 });
-        }
-    });
-
-    let output = "Ticket No;Start Date;Timespent;Comment";
-    records.forEach(a => {
-        output += "\r\n" + stringifyWorklog(a);
-    });
-
-    download('test.txt', output);
-}
-
-function getDomData() {
-    var elements = document.getElementsByClassName('DetailedReportContent__table');
-    if (elements.length > 0) {
-        const table = elements[0];
-        const body = table.children[1];
-        const items = body.children;
-        const records = [];
-        var project = "";
-        var comment = "";
-        var duration = "";
-        var date = "";
-        for (let index = 0; index < items.length; index++) {
-            const element = items[index];
-            project = element.getElementsByClassName("css-1q07lv6-NameContainer e1t0hi2n9")[0]?.children[0]?.textContent;
-            comment = element.getElementsByClassName("ebdwukj8 css-14l5gqu-TimeEntryDescription-DescriptionInput e10vqxue0")[0]?.textContent;
-            duration = element.getElementsByClassName("css-1xlwrd0-Highlighted e1ujoigz0")[0].textContent;
-            date = element.getElementsByClassName("DateTimeInput__startDate")[0].textContent;
-            records.push({ project, comment, duration, date });
-        }
-
-        processData(records);
-    }
-}
-
-function processData(data) {    
+function processData(data) {
     return data.map(a => ({ project: a.project, comment: a.description, totalDuration: Math.round((a.dur / 60000)), date: dateFormat(a.start) }))
 }
 
 function groupData(data, toRoundDuration) {
     const records = [];
     data.forEach(item => {
-        updateRecord(item);
-        let foundItem = records.find(a => a.project === item.project && a.date === item.date && a.comment === item.comment);
+        const updatedRecord = updateRecord(item);
+        let foundItem = records.find(a => a.project === updatedRecord.project && a.date === updatedRecord.date && a.comment === updatedRecord.comment);
         if (foundItem !== undefined) {
-            foundItem.totalDuration += item.totalDuration;
+            foundItem.totalDuration += updatedRecord.totalDuration;
             foundItem.recordCount += 1;
         }
         else {
-            records.push({ ...item, recordCount: 1 });
+            records.push({ ...updatedRecord, recordCount: 1 });
         }
     });
     return toRoundDuration ? records.map(a => ({ ...a, totalDuration: roundDuration(a.totalDuration) })) : records;
@@ -81,9 +29,9 @@ function groupData(data, toRoundDuration) {
 function createReports(data, filter) {
     //{ filename, restAs, includedProjects}   
     filter.forEach(a => {
-        var itemsForReport = data.filter(d => a.includedProjects.includes(d.projectName) || !!a.restAs)
-                                .map(d=>!!a.restAs?(a.includedProjects.includes(d.projectName)?d:{...d,project:a.restAs, description:"vyvoj PPL"}):d);
-        var content = getReportContent(itemsForReport);        
+        const itemsForReport = data.filter(d => a.includedProjects.includes(d.projectName) || !!a.restAs)
+            .map(d => !!a.restAs ? (a.includedProjects.includes(d.projectName) ? d : { ...d, project: a.restAs, comment: d.project }) : d);
+        const content = getReportContent(itemsForReport);
         download(`${a.filename}.csv`, content);
     });
 }
@@ -98,23 +46,26 @@ function getReportContent(data) {
 
 function updateRecord(workLogItem) {
     // vše za středníkem je komentář
-    const commentIndex = workLogItem.comment.search(";");
+    var updatedRecord = { ...workLogItem };
+    const commentIndex = updatedRecord.comment.search(";");
     if (commentIndex > -1) {
-        const projNumber = workLogItem.comment.slice(0, commentIndex);
-        workLogItem.comment = workLogItem.comment.slice(commentIndex + 1, workLogItem.comment.length);
-        workLogItem.project = `${workLogItem.project}-${projNumber}`;
+        const projNumber = updatedRecord.comment.slice(0, commentIndex);
+        updatedRecord.comment = updatedRecord.comment.slice(commentIndex + 1, updatedRecord.comment.length);
+        updatedRecord.projectName = updatedRecord.project;
+        updatedRecord.project = `${updatedRecord.project}-${projNumber}`;
     }
     else {
-        if (!!workLogItem.project) {
-            workLogItem.projectName = workLogItem.project;
-            workLogItem.project = `${workLogItem.project}-${workLogItem.comment}`;
-            workLogItem.comment = "";
+        if (!!updatedRecord.project) {
+            updatedRecord.projectName = updatedRecord.project;
+            updatedRecord.project = `${updatedRecord.project}-${updatedRecord.comment}`;
+            updatedRecord.comment = "";
         }
         else {
-            workLogItem.projectName = "";
-            workLogItem.project = "NoProject";
+            updatedRecord.projectName = "";
+            updatedRecord.project = "NoProject";
         }
     }
+    return updatedRecord;
 }
 
 function stringifyWorklog({ project, comment, totalDuration, date }) {
@@ -198,5 +149,7 @@ function getDateRange() {
     const data = await getDataAsync(from, to, config.workspaceId);
     const processedData = processData(data);
     const groupedData = groupData(processedData, config.roundDuration);
+    console.log('groupedData:');
+    console.log(groupedData);
     createReports(groupedData, config.filter);
 })();
