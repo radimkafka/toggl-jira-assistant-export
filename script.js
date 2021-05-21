@@ -26,13 +26,19 @@ function groupData(data, toRoundDuration) {
     return toRoundDuration ? records.map(a => ({ ...a, totalDuration: roundDuration(a.totalDuration) })) : records;
 }
 
-function createReports(data, filter) {
+function createReports(data) {
+    //{ name, items}[]   
+    data.forEach(a => {
+        download(`${a.name}.csv`, getReportContent(a.items));
+    });
+}
+
+function filterData(data, filter) {
     //{ filename, restAs, includedProjects}   
-    filter.forEach(a => {
+    return filter.map(a => {
         const itemsForReport = data.filter(d => a.includedProjects.includes(d.projectName) || !!a.restAs)
             .map(d => !!a.restAs ? (a.includedProjects.includes(d.projectName) ? d : { ...d, project: a.restAs, comment: d.project }) : d);
-        const content = getReportContent(itemsForReport);
-        download(`${a.filename}.csv`, content);
+        return { name: a.filename, items: itemsForReport };
     });
 }
 
@@ -143,7 +149,7 @@ function getDateRange() {
     return [from, to];
 }
 
-function test123(){
+function test123() {
     console.log("aaaa");
 }
 
@@ -152,6 +158,7 @@ function test123(){
     const config = await getConfigFromStorageAsync();
     const data = await getDataAsync(from, to, config.workspaceId);
     const processedData = processData(data);
-    const groupedData = groupData(processedData, config.roundDuration);    
-    createReports(groupedData, config.filter);
+    const groupedData = groupData(processedData, config.roundDuration);
+    const filteredData = filterData(groupedData, config.filter);
+    createReports(filteredData);
 })();
