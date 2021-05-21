@@ -7,7 +7,7 @@ function download(filename, text) {
 }
 
 function processData(data) {
-    return data.map(a => ({ project: a.project, comment: a.description, totalDuration: Math.round((a.dur / 60000)), date: dateFormat(a.start) }))
+    return data.map(a => ({ project: a.project, comment: a.description, totalDuration: Math.round((a.dur / 1000)), date: dateFormat(a.start) }))
 }
 
 function groupData(data, toRoundDuration) {
@@ -23,7 +23,7 @@ function groupData(data, toRoundDuration) {
             records.push({ ...updatedRecord, recordCount: 1 });
         }
     });
-    return toRoundDuration ? records.map(a => ({ ...a, totalDuration: roundDuration(a.totalDuration) })) : records;
+    return toRoundDuration ? records.map(a => ({ ...a, totalDuration: roundDuration(a.totalDuration), originalDuration: a.totalDuration })) : records;
 }
 
 function createReports(data) {
@@ -74,19 +74,21 @@ function updateRecord(workLogItem) {
     return updatedRecord;
 }
 
-function stringifyWorklog({ project, comment, totalDuration, date }) {
-    const minutes = totalDuration % 60;
-    const hours = (totalDuration - minutes) / 60;
+function timeFormat(duration, includeSeconds) {
+    const hours = Math.floor(duration / 60 / 60);
+    const minutes = Math.floor((duration - hours * 60 * 60) / 60)
+    const seconds = duration - (hours * 60 * 60 + minutes * 60)
 
     const minutesString = minutes < 10 ? `0${minutes}` : minutes;
     const hoursString = hours < 10 ? `0${hours}` : hours;
-
-    return `${project};${date};${hoursString}:${minutesString};${comment}`;
+    const secondsString = seconds < 10 ? `0${seconds}` : seconds;
+    return `${hoursString}:${minutesString}${!!includeSeconds ? ":" + secondsString : ""}`;
 }
 
-/*
+function stringifyWorklog({ project, comment, totalDuration, date }) {
+    return `${project};${date};${timeFormat(totalDuration)};${comment}`;
+}
 
-*/
 function getConfigFromStorageAsync() {
     return new Promise(function (resolve, reject) {
         chrome.storage.local.get("togglJiraConfig", function (items) {
@@ -125,17 +127,17 @@ async function getDataAsync(from, to, workspaceId) {
 function dateFormat(dateString) {
     const date = new Date(dateString);
     const year = date.getFullYear();
-    const month = date.getMonth();
+    const month = date.getMonth() + 1;
     const day = date.getDate();
 
     return `${year}-${month < 10 ? "0" : ""}${month}-${day < 10 ? "0" : ""}${day}`;
 }
 
 function roundDuration(worklogItemDuration) {
-    const modulo = worklogItemDuration % 5;
+    const modulo = worklogItemDuration % (60 * 5);
     let add = 0;
-    if (modulo >= 3) {
-        add = 5 - modulo;
+    if (modulo >= 150) {
+        add = 150 - modulo;
     }
     else {
         add = -1 * modulo;
@@ -147,10 +149,6 @@ function getDateRange() {
     const from = "2021-05-01";
     const to = "2021-05-31";
     return [from, to];
-}
-
-function test123() {
-    console.log("aaaa");
 }
 
 (async function () {
