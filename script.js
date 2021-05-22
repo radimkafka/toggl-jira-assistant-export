@@ -7,7 +7,7 @@ function download(filename, text) {
 }
 
 function processData(data) {
-    return data.map(a => ({ project: a.project, comment: a.description, totalDuration: Math.round((a.dur / 1000)), date: dateFormat(a.start) }))
+    return data.map(a => ({ project: a.project, comment: a.description, totalDuration: Math.round((a.dur / 1000)), date: dateStringFormat(a.start) }))
 }
 
 function groupData(data, toRoundDuration) {
@@ -124,13 +124,17 @@ async function getDataAsync(from, to, workspaceId) {
     return records;
 }
 
-function dateFormat(dateString) {
-    const date = new Date(dateString);
+function dateFormat(date) {
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
     const day = date.getDate();
 
     return `${year}-${month < 10 ? "0" : ""}${month}-${day < 10 ? "0" : ""}${day}`;
+}
+
+function dateStringFormat(dateString) {
+    const date = new Date(dateString);
+    return dateFormat(date);
 }
 
 function roundDuration(worklogItemDuration) {
@@ -145,16 +149,57 @@ function roundDuration(worklogItemDuration) {
     return worklogItemDuration + add;
 }
 
-function getDateRange() {
-    const from = "2021-05-01";
-    const to = "2021-05-31";
-    return [from, to];
+function getDateRageThisMonth() {
+    const dateNow = new Date(Date.now());
+    const from = new Date(dateNow.getFullYear(), dateNow.getMonth(), 1);
+    const to = new Date(dateNow.getFullYear(), dateNow.getMonth() + 1, 0);
+    return [dateFormat(from), dateFormat(to)];
+
+}
+
+function getDateRagePreviousMonth() {
+    const dateNow = new Date(Date.now());
+    const from = new Date(dateNow.getFullYear(), dateNow.getMonth() - 1, 1);
+    const to = new Date(dateNow.getFullYear(), dateNow.getMonth(), 0);
+    return [dateFormat(from), dateFormat(to)];
+}
+
+function getDateRageFromUrl() {
+    const matched = window.location.pathname.match("from\/(?<from>....-..-..)\/to\/(?<to>(....-..-..))");
+    if (!matched || !matched.groups["from"] || !matched?.groups["to"]) {
+        console.warn("Date not found in URL. Date range set to last month.")
+        return getDateRagePreviousMonth();
+    }
+    return [matched.groups["from"], matched?.groups["to"]];
+}
+
+function getDateRange(mode) {
+    switch (mode) {
+        case "custom": return getDateRageFromUrl();
+        case "thisMonth": return getDateRageThisMonth();
+        case "prevMonth": return getDateRagePreviousMonth();
+        default: return getDateRagePreviousMonth();
+    }
+}
+
+function getWorkspaceId() {
+    console.log('window.location.pathname: ', window.location.pathname);
+    const matched = window.location.pathname.match("(.*)\/(?<reports>.*)\/(?<type>.*)\/(?<workspaceId>.*)")
+    if (!matched || !matched.groups["workspaceId"]) {
+        console.error("User id not found!");
+        return undefined;
+    }
+    return matched.groups["workspaceId"];
 }
 
 (async function () {
-    const [from, to] = getDateRange();
     const config = await getConfigFromStorageAsync();
-    const data = await getDataAsync(from, to, config.workspaceId);
+    const [from, to] = getDateRange(config.dateMode);
+    const workspaceId = getWorkspaceId();
+    if (!workspaceId)
+        return;
+        
+    const data = await getDataAsync(from, to, workspaceId);
     const processedData = processData(data);
     const groupedData = groupData(processedData, config.roundDuration);
     const filteredData = filterData(groupedData, config.filter);

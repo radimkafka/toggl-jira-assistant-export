@@ -1,12 +1,26 @@
+const dateRange = {
+    this_month: "thisMonth",
+    prev_month: "prevMonth",
+    custom: "custom"
+};
 
-async function onClick(info, tab) {    
-    const config = await GetConfig();    
-    chrome.storage.local.set({ "togglJiraConfig": config });
-    
+async function onClick(info, tab) {
+    console.log(getDateMode(info.menuItemId));
+    const config = await GetConfig();
+    chrome.storage.local.set({ "togglJiraConfig": { ...config, dateMode: getDateMode(info.menuItemId) } });
+
     chrome.scripting.executeScript({
         target: { tabId: tab.id },
         files: ['script.js']
     });
+}
+
+function getDateMode(tabId) {
+    for (const key in dateRange)
+        if (tabId.includes(key))
+            return dateRange[key];
+
+    return dateRange.prev_month;
 }
 
 async function GetConfig() {
@@ -15,7 +29,7 @@ async function GetConfig() {
     return data;
 }
 
-const contextItem = {
+const contextItemMain = {
     contexts: ['page'],
     id: 'toggle_jira_report',
     title: 'Toggle jira report',
@@ -23,5 +37,35 @@ const contextItem = {
     visible: true,
 };
 
-chrome.contextMenus.create(contextItem);
+const contextItemThisMonth = {
+    contexts: ['page'],
+    parentId: 'toggle_jira_report',
+    id: 'toggle_jira_report_this_month',
+    title: 'This month',
+    type: 'normal',
+    visible: true,
+};
+
+const contextItemPrevMonth = {
+    contexts: ['page'],
+    parentId: 'toggle_jira_report',
+    id: 'toggle_jira_report_prev_month',
+    title: 'Previous month',
+    type: 'normal',
+    visible: true,
+};
+const contextItemCustom = {
+    contexts: ['page'],
+    parentId: 'toggle_jira_report',
+    id: 'toggle_jira_report_custom',
+    title: 'From url',
+    type: 'normal',
+    visible: true
+};
+
+
+chrome.contextMenus.create(contextItemMain);
+chrome.contextMenus.create(contextItemThisMonth);
+chrome.contextMenus.create(contextItemPrevMonth);
+chrome.contextMenus.create(contextItemCustom);
 chrome.contextMenus.onClicked.addListener(onClick);
