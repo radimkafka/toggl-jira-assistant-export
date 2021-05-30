@@ -1,4 +1,6 @@
-function download(filename, text) {
+import { Config,  GroupedReportItem, ReportData, ReportItem, TogglReportItem, TogglResponse } from "./types";
+
+function download(filename: string, text: string) {
     var hiddenElement = document.createElement('a');
     hiddenElement.href = 'data:attachment/text,' + encodeURI(text);
     hiddenElement.target = '_blank';
@@ -6,44 +8,56 @@ function download(filename, text) {
     hiddenElement.click();
 }
 
-function processData(data) {
-    return data.map(a => ({ project: a.project, comment: a.description, totalDuration: Math.round((a.dur / 1000)), date: dateStringFormat(a.start) }))
+function processData(data: TogglReportItem[]): ReportItem[] {
+    return data.map(a => ({ project: a.project, comment: a.description, duration: Math.round((a.dur / 1000)), date: dateStringFormat(a.start) }))
+        .map(a => updateProjectName(a));
 }
 
-function groupData(data, toRoundDuration) {
-    const records = [];
-    data.forEach(item => {
-        const updatedRecord = updateRecord(item);
-        let foundItem = records.find(a => a.project === updatedRecord.project && a.date === updatedRecord.date && a.comment === updatedRecord.comment);
-        if (foundItem !== undefined) {
-            foundItem.totalDuration += updatedRecord.totalDuration;
+/**
+ * Spáruje záznamy se stejným dnem, projektem a komentářem
+ * @param data 
+ */
+function groupData(data: ReportItem[]) {
+    const records: GroupedReportItem[] = [];
+    data.forEach((item) => {        
+        let foundItem = records.find(a => a.project === item.project && a.date === item.date && a.comment === item.comment);
+        if (foundItem) {
             foundItem.recordCount += 1;
+            foundItem.roundedDuration += roundDuration(item.duration);
+            foundItem.duration += item.duration;
         }
         else {
-            records.push({ ...updatedRecord, recordCount: 1 });
+            records.push({ ...item, recordCount: 1, roundedDuration: roundDuration(item.duration), duration: item.duration });
         }
     });
 
-    return toRoundDuration ? records.map(a => ({ ...a, totalDuration: roundDuration(a.totalDuration), originalDuration: a.totalDuration })) : records;
+    return records;
 }
 
-function createReports(data) {
-    //{ name, items}[]   
+function createReports(data: { name: string, items: ReportData[] }[]) {
     data.forEach(a => {
         download(`${a.name}.csv`, getReportContent(a.items));
     });
 }
 
-function filterData(data, filter) {
-    //{ filename, restAs, includedProjects}   
-    return filter.map(a => {
-        const itemsForReport = data.filter(d => a.includedProjects.includes(d.projectName) || !!a.restAs)
-            .map(d => !!a.restAs ? (a.includedProjects.includes(d.projectName) ? d : { ...d, project: a.restAs, comment: d.project }) : d);
+function filterData(data: GroupedReportItem[], config: Config): { name: string, items: ReportData[] }[] {
+    return config.filter.map(a => {
+        const itemsForReport = data.filter(d => a.includedProjects.includes(d?.projectName ?? "") || !!a.restAs)
+            .map(d => !!a.restAs && !a.includedProjects.includes(d?.projectName ?? "") ? getReportData({ ...d, project: a.restAs, comment: d.project }, config.roundDuration) : getReportData(d, config.roundDuration));
         return { name: a.filename, items: itemsForReport };
     });
 }
 
-function getReportContent(data) {
+function getReportData(item: GroupedReportItem, useRoundedDuration: boolean): ReportData {
+    return {
+        comment: item.comment,
+        date: item.date,
+        project: item.project,
+        duration: useRoundedDuration ? item.roundedDuration : item.duration
+    };
+}
+
+function getReportContent(data: ReportData[]) {
     let output = "Ticket No;Start Date;Timespent;Comment";
     const newLine = "\r\n";
     data.forEach(a => {
@@ -52,9 +66,13 @@ function getReportContent(data) {
     return output;
 }
 
-function updateRecord(workLogItem) {
+/**
+ * Upraví project, project name a comment 
+ * @param item 
+ */
+function updateProjectName(item: ReportItem): ReportItem {
     // vše za středníkem je komentář
-    var updatedRecord = { ...workLogItem };
+    var updatedRecord = { ...item };
     const commentIndex = updatedRecord.comment.search(";");
     if (commentIndex > -1) {
         const projNumber = updatedRecord.comment.slice(0, commentIndex);
@@ -71,12 +89,18 @@ function updateRecord(workLogItem) {
         else {
             updatedRecord.projectName = "";
             updatedRecord.project = "NoProject";
+            console.warn("Item without project!", item);
         }
     }
     return updatedRecord;
 }
 
-function timeFormat(duration, includeSeconds) {
+/**
+ * 
+ * @param duration dobra v sekundách
+ * @param includeSeconds 
+ */
+function timeFormat(duration: number, includeSeconds?: boolean) {
     const hours = Math.floor(duration / 60 / 60);
     const minutes = Math.floor((duration - hours * 60 * 60) / 60)
     const seconds = duration - (hours * 60 * 60 + minutes * 60)
@@ -87,11 +111,11 @@ function timeFormat(duration, includeSeconds) {
     return `${hoursString}:${minutesString}${!!includeSeconds ? ":" + secondsString : ""}`;
 }
 
-function stringifyWorklog({ project, comment, totalDuration, date }) {
-    return `${project};${date};${timeFormat(totalDuration)};${comment}`;
+function stringifyWorklog({ project, comment, duration, date }: ReportData) {
+    return `${project};${date};${timeFormat(duration)};${comment}`;
 }
 
-function getConfigFromStorageAsync() {
+function getConfigFromStorageAsync(): Promise<Config> {
     return new Promise(function (resolve, reject) {
         chrome.storage.local.get("togglJiraConfig", function (items) {
             resolve(items.togglJiraConfig);
@@ -99,7 +123,7 @@ function getConfigFromStorageAsync() {
     });
 }
 
-async function getDataAsync(from, to, workspaceId) {
+async function getDataAsync(from: string, to: string, workspaceId: string): Promise<TogglReportItem[]> {
     let start = 1;
     let paging = 1;
     let workspace_id = workspaceId;
@@ -108,11 +132,11 @@ async function getDataAsync(from, to, workspaceId) {
     let totalCount = 0;
     let loadedData = 0;
 
-    let records = [];
+    let records: TogglReportItem[] = [];
     do {
         url = `https://track.toggl.com/reports/api/v2/details.json?workspace_id=${workspace_id}&start_date=${from}&end_date=${to}&start=${start}&order_by=date&order_dir=asc&date_format=MM/DD/YYYY&order_field=date&order_desc=false&since=${from}&until=${to}&page=${paging}&user_agent=Toggl%20New%205.10.10&bars_count=31&subgrouping_ids=true&bookmark_token=`
         var response = await fetch(url);
-        var data = await response.json();
+        var data: TogglResponse = await response.json();
         records = records.concat(data.data);
 
         totalCount = data.total_count
@@ -126,7 +150,7 @@ async function getDataAsync(from, to, workspaceId) {
     return records;
 }
 
-function dateFormat(date) {
+function dateFormat(date: Date) {
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
     const day = date.getDate();
@@ -134,12 +158,12 @@ function dateFormat(date) {
     return `${year}-${month < 10 ? "0" : ""}${month}-${day < 10 ? "0" : ""}${day}`;
 }
 
-function dateStringFormat(dateString) {
+function dateStringFormat(dateString: string) {
     const date = new Date(dateString);
     return dateFormat(date);
 }
 
-function roundDuration(worklogItemDuration) {
+function roundDuration(worklogItemDuration: number): number {
     const modulo = worklogItemDuration % (60 * 5);
     let add = 0;
     if (modulo >= 150) {
@@ -152,7 +176,7 @@ function roundDuration(worklogItemDuration) {
     return rounded;
 }
 
-function getDateRageThisMonth() {
+function getDateRageThisMonth(): [string, string] {
     const dateNow = new Date(Date.now());
     const from = new Date(dateNow.getFullYear(), dateNow.getMonth(), 1);
     const to = new Date(dateNow.getFullYear(), dateNow.getMonth() + 1, 0);
@@ -160,32 +184,32 @@ function getDateRageThisMonth() {
 
 }
 
-function getDateRagePreviousMonth() {
+function getDateRagePreviousMonth(): [string, string] {
     const dateNow = new Date(Date.now());
     const from = new Date(dateNow.getFullYear(), dateNow.getMonth() - 1, 1);
     const to = new Date(dateNow.getFullYear(), dateNow.getMonth(), 0);
     return [dateFormat(from), dateFormat(to)];
 }
 
-function getDateRageFromUrl() {
+function getDateRangeFromUrl(): [string, string] {
     const matched = window.location.pathname.match("from\/(?<from>....-..-..)\/to\/(?<to>(....-..-..))");
-    if (!matched || !matched.groups["from"] || !matched?.groups["to"]) {
+    if (!matched?.groups?.["from"] || !matched?.groups?.["to"]) {
         console.warn("Date not found in URL. Date range set to last month.")
         return getDateRagePreviousMonth();
     }
     return [matched.groups["from"], matched?.groups["to"]];
 }
 
-function getDateRange(mode) {
+function getDateRange(mode: "custom" | "thisMonth" | "prevMonth"): [string, string] {
     switch (mode) {
-        case "custom": return getDateRageFromUrl();
+        case "custom": return getDateRangeFromUrl();
         case "thisMonth": return getDateRageThisMonth();
         case "prevMonth": return getDateRagePreviousMonth();
         default: return getDateRagePreviousMonth();
     }
 }
 
-function getWorkspaceId() {
+function getWorkspaceId(): string {
     const url = window.location.pathname;
     var rest = url.replace("https://", "");
 
@@ -208,6 +232,8 @@ function getWorkspaceId() {
     return id;
 }
 
+
+//při kompialci do TS smazat Object.defineProperty(exports, "__esModule", { value: true }); jinak se to chromu nebude líbit
 (async function () {
     const config = await getConfigFromStorageAsync();
     const [from, to] = getDateRange(config.dateMode);
@@ -217,8 +243,8 @@ function getWorkspaceId() {
 
     const data = await getDataAsync(from, to, workspaceId);
     const processedData = processData(data);
-    const groupedData = groupData(processedData, config.roundDuration);    
-    const filteredData = filterData(groupedData, config.filter);
+    const groupedData = groupData(processedData);
+    const filteredData = filterData(groupedData, config);
 
-    createReports(filteredData);    
+    createReports(filteredData);
 })();

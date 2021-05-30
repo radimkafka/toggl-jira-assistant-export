@@ -4,21 +4,20 @@ const dateRange = {
     custom: "custom"
 };
 
-async function onClick(info, tab) {
-    console.log(getDateMode(info.menuItemId));
+async function onClick(info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) {
     const config = await GetConfig();
     chrome.storage.local.set({ "togglJiraConfig": { ...config, dateMode: getDateMode(info.menuItemId) } });
 
     chrome.scripting.executeScript({
-        target: { tabId: tab.id },
+        target: { tabId: tab?.id ?? 0 },
         files: ['script.js']
     });
 }
 
-function getDateMode(tabId) {
+function getDateMode(tabId: string) {
     for (const key in dateRange)
         if (tabId.includes(key))
-            return dateRange[key];
+            return (dateRange as any)[key];
 
     return dateRange.prev_month;
 }

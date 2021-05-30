@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "target": "ES2020",
+        "module": "CommonJS",
+        "strict": true,
+        "esModuleInterop": true,
+        "rootDir": "src",
+        "outDir": "dist",
+        "noImplicitAny": true,
+        "types": ["chrome"],        
+        "resolveJsonModule":true
+    },
+    "include": ["src/**/*","src/**/*.json"],
+    "exclude": ["node_modules", "**/*.spec.ts"],    
+}
