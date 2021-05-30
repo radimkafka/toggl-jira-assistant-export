@@ -13,7 +13,7 @@ window.config = {
         },
         {
             "filename": "elx",
-            "restAs": "",
+            "restAs": "BEI-27",
             "includedProjects": [
                 "BEI",
                 "RED",

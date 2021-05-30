@@ -23,6 +23,7 @@ function groupData(data, toRoundDuration) {
             records.push({ ...updatedRecord, recordCount: 1 });
         }
     });
+
     return toRoundDuration ? records.map(a => ({ ...a, totalDuration: roundDuration(a.totalDuration), originalDuration: a.totalDuration })) : records;
 }
 
@@ -44,8 +45,9 @@ function filterData(data, filter) {
 
 function getReportContent(data) {
     let output = "Ticket No;Start Date;Timespent;Comment";
+    const newLine = "\r\n";
     data.forEach(a => {
-        output += "\r\n" + stringifyWorklog(a);
+        output += newLine + stringifyWorklog(a);
     });
     return output;
 }
@@ -111,7 +113,6 @@ async function getDataAsync(from, to, workspaceId) {
         url = `https://track.toggl.com/reports/api/v2/details.json?workspace_id=${workspace_id}&start_date=${from}&end_date=${to}&start=${start}&order_by=date&order_dir=asc&date_format=MM/DD/YYYY&order_field=date&order_desc=false&since=${from}&until=${to}&page=${paging}&user_agent=Toggl%20New%205.10.10&bars_count=31&subgrouping_ids=true&bookmark_token=`
         var response = await fetch(url);
         var data = await response.json();
-        console.log('data: ', data);
         records = records.concat(data.data);
 
         totalCount = data.total_count
@@ -142,12 +143,13 @@ function roundDuration(worklogItemDuration) {
     const modulo = worklogItemDuration % (60 * 5);
     let add = 0;
     if (modulo >= 150) {
-        add = 150 - modulo;
+        add = 300 - modulo;
     }
     else {
         add = -1 * modulo;
     }
-    return worklogItemDuration + add;
+    const rounded = worklogItemDuration + add;
+    return rounded;
 }
 
 function getDateRageThisMonth() {
@@ -183,10 +185,10 @@ function getDateRange(mode) {
     }
 }
 
-function getWorkspaceId() {    
-    const url = window.location.pathname;        
+function getWorkspaceId() {
+    const url = window.location.pathname;
     var rest = url.replace("https://", "");
-    
+
     rest = rest.substring(rest.indexOf("\/") + 1);//odstranění stránky    
     rest = rest.substring(rest.indexOf("\/") + 1);//odstranění reports    
     rest = rest.substring(rest.indexOf("\/") + 1);//odstranění summary/detailed/weekly
@@ -215,7 +217,8 @@ function getWorkspaceId() {
 
     const data = await getDataAsync(from, to, workspaceId);
     const processedData = processData(data);
-    const groupedData = groupData(processedData, config.roundDuration);
+    const groupedData = groupData(processedData, config.roundDuration);    
     const filteredData = filterData(groupedData, config.filter);
-    createReports(filteredData);
+
+    createReports(filteredData);    
 })();
