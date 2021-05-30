@@ -1,34 +1,30 @@
+"use strict";
 const dateRange = {
     this_month: "thisMonth",
     prev_month: "prevMonth",
     custom: "custom"
 };
-
 async function onClick(info, tab) {
+    console.log('onClick: ', onClick);
     console.log(getDateMode(info.menuItemId));
     const config = await GetConfig();
     chrome.storage.local.set({ "togglJiraConfig": { ...config, dateMode: getDateMode(info.menuItemId) } });
-
     chrome.scripting.executeScript({
         target: { tabId: tab.id },
         files: ['script.js']
     });
 }
-
 function getDateMode(tabId) {
     for (const key in dateRange)
         if (tabId.includes(key))
             return dateRange[key];
-
     return dateRange.prev_month;
 }
-
 async function GetConfig() {
     var response = await fetch("./config.json");
     var data = await response.json();
     return data;
 }
-
 const contextItemMain = {
     contexts: ['page'],
     id: 'toggle_jira_report',
@@ -36,7 +32,6 @@ const contextItemMain = {
     type: 'normal',
     visible: true,
 };
-
 const contextItemThisMonth = {
     contexts: ['page'],
     parentId: 'toggle_jira_report',
@@ -45,7 +40,6 @@ const contextItemThisMonth = {
     type: 'normal',
     visible: true,
 };
-
 const contextItemPrevMonth = {
     contexts: ['page'],
     parentId: 'toggle_jira_report',
@@ -62,8 +56,6 @@ const contextItemCustom = {
     type: 'normal',
     visible: true
 };
-
-
 chrome.contextMenus.create(contextItemMain);
 chrome.contextMenus.create(contextItemThisMonth);
 chrome.contextMenus.create(contextItemPrevMonth);
