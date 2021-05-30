@@ -7,6 +7,8 @@ export interface TogglReportItem {
     start: string,
     end: string,
     updated: string,
+
+    // doba v milisekundách
     dur: number,
     user: string,
     use_stop: boolean,
@@ -36,15 +38,22 @@ export interface ReportItem {
     project: string;
     projectName?: string;
     comment: string;
-    totalDuration: number;
+
+    /** doba ve sekundách */
+    duration: number;
     date: string;
 }
 
 export interface GroupedReportItem extends ReportItem {
     recordCount: number;
-    totalDuration: number;
-    originalTotalDuration?: number;
-    rounded: boolean;
+    roundedDuration: number;
+}
+
+export interface ReportData{
+    project: string;
+    comment: string;
+    duration: number;
+    date: string;
 }
 
 export interface Config {

@@ -40,21 +40,79 @@ const baseConfig = {
 }
 
 function test() {
+    // testRounding();
+    testUpdateRecord();
+    return;
     const config = window.config;
     const data = window.data.base;
     const processedData = processData(data);
-    console.log('processedData: ', processedData);
-    const groupedData = groupData(processedData, config.roundDuration);
-    console.log('groupedData: ', groupedData);
-    
-    const filteredData = filterData(groupedData, config.filter);    
-    console.log('filteredData: ', filteredData);
-    const sums = sum(filteredData);    
+    const groupedData = groupData(processedData);
+    const filteredData = filterData(groupedData, config);
+    filteredData.forEach(a => console.log(getReportContent(a.items)));
+
+    const sums = sum(filteredData);
 
     // const groupedByDate = groupByDate(items);
     // groupedByDate.map(a => ({ date: a.date, items: sum(a.items).map(a => ({ projectName: a.projectName, originalDurationStr: timeFormat(a.originalDuration, true), duration: a.duration, originalDuration: a.originalDuration })) }))
     //     .forEach(a => { console.log(a.date); console.log(a.items); })
 }
+
+function testRounding() {
+    const getSecondsFromMinuts = minutes => minutes * 60;
+    const getSeconds = _ => Math.floor(Math.random() * 60);
+    const test = duration => {
+        var rounded = roundDuration(duration);
+        console.log(timeFormat(duration, true), timeFormat(rounded, true));
+    };
+
+    for (let i = 0; i <= 10; i++) {
+        test(getSecondsFromMinuts(i) + getSeconds());
+    }
+    for (let i = 40; i < 50; i++) {
+        test(getSecondsFromMinuts(i) + getSeconds());
+    }
+    console.log("_______");
+    test(getSecondsFromMinuts(2) + 28);
+    test(getSecondsFromMinuts(2) + 29);
+    test(getSecondsFromMinuts(2) + 30);
+    test(getSecondsFromMinuts(2) + 31);
+    test(getSecondsFromMinuts(2) + 32);
+}
+
+function testUpdateRecord() {
+
+    const test = item => {
+        const updated = updateProjectName(item);
+        console.table([item,updated]);
+    };
+
+
+    var data = [
+        {
+            project: "ABC",
+            comment: "123;very useful comment",          
+        },
+        {
+            project: "ABC",
+            comment: "231",
+        },
+        {
+            project: "ABC-123",
+            comment: "",
+        },
+        {
+            project: "",
+            comment: "commentABC",
+        },
+
+    ];
+    data.forEach(a => {
+        test(a);
+    });
+
+}
+
+
 
 function createSummary(data) {
     const items = data.reduce((acc, curr) => acc.concat(curr.items), []);
@@ -69,8 +127,8 @@ function createSummary(data) {
     download("summary.csv", text);
 }
 
-function sum(items) {        
-    var summed = items.reduce((acc, curr) => acc.concat(curr.items), []);    
+function sum(items) {
+    var summed = items.reduce((acc, curr) => acc.concat(curr.items), []);
     summed = items.reduce((acc, curr) => {
         const item = acc.find(a => a.projectName === curr.projectName)
         if (item) {
@@ -83,7 +141,7 @@ function sum(items) {
         return acc;
     }, []);
 
-    return summed.map(a => ({ projectName: a.projectName, durationStr: timeFormat(a.duration, true), originalDurationStr: timeFormat(a.originalDuration, true), duration: a.duration, originalDuration: a.originalDuration  }));
+    return summed.map(a => ({ projectName: a.projectName, durationStr: timeFormat(a.duration, true), originalDurationStr: timeFormat(a.originalDuration, true), duration: a.duration, originalDuration: a.originalDuration }));
 }
 
 
