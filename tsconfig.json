@@ -7,10 +7,9 @@
         "esModuleInterop": true,
         "rootDir": "src",
         "outDir": "dist",
-        "allowJs": true,
         "noImplicitAny": true,
+        "types": ["chrome"],        
         "resolveJsonModule":true
-
     },
     "include": ["src/**/*","src/**/*.json"],
     "exclude": ["node_modules", "**/*.spec.ts"],    

@@ -49,7 +49,7 @@ export interface GroupedReportItem extends ReportItem {
     roundedDuration: number;
 }
 
-export interface ReportData{
+export interface ReportData {
     project: string;
     comment: string;
     duration: number;
@@ -57,7 +57,7 @@ export interface ReportData{
 }
 
 export interface Config {
-    dateMode: DateModel;
+    dateMode: "custom" | "thisMonth" | "prevMonth";
     roundDuration: boolean;
     filter: ConfigFilterItem[];
 }
@@ -66,10 +66,4 @@ export interface ConfigFilterItem {
     filename: string;
     restAs: string,
     includedProjects: string[]
-}
-
-export enum DateModel {
-    custom = "custom",
-    thisMonth = "thisMonth",
-    prevMonth = "prevMonth"
 }

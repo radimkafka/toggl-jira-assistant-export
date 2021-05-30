@@ -40,21 +40,11 @@ const baseConfig = {
 }
 
 function test() {
-    // testRounding();
-    testUpdateRecord();
+    //testRounding();
+    //testUpdateRecord();
+    testGroupData();
     return;
-    const config = window.config;
-    const data = window.data.base;
-    const processedData = processData(data);
-    const groupedData = groupData(processedData);
-    const filteredData = filterData(groupedData, config);
-    filteredData.forEach(a => console.log(getReportContent(a.items)));
 
-    const sums = sum(filteredData);
-
-    // const groupedByDate = groupByDate(items);
-    // groupedByDate.map(a => ({ date: a.date, items: sum(a.items).map(a => ({ projectName: a.projectName, originalDurationStr: timeFormat(a.originalDuration, true), duration: a.duration, originalDuration: a.originalDuration })) }))
-    //     .forEach(a => { console.log(a.date); console.log(a.items); })
 }
 
 function testRounding() {
@@ -83,14 +73,14 @@ function testUpdateRecord() {
 
     const test = item => {
         const updated = updateProjectName(item);
-        console.table([item,updated]);
+        console.table([item, updated]);
     };
 
 
     var data = [
         {
             project: "ABC",
-            comment: "123;very useful comment",          
+            comment: "123;very useful comment",
         },
         {
             project: "ABC",
@@ -110,6 +100,96 @@ function testUpdateRecord() {
         test(a);
     });
 
+}
+
+function testGroupData() {
+    test = a => {
+        // console.table(a);
+        console.table(groupData(a).map(b => ({ ...b, mins: b.duration / 60 })));
+    };
+    const data = [
+        {
+            project: "ABC-123",
+            comment: "",
+            duration: 1 * 60,
+            date: "2021-05-30"
+        },
+        {
+            project: "ABC-123",
+            comment: "",
+            duration: 2 * 60,
+            date: "2021-05-30"
+        },
+        {
+            project: "ABC-123",
+            comment: "",
+            duration: 3 * 60,
+            date: "2021-05-30"
+        },
+    ];
+    const data2 = [
+        {
+            project: "ABC-123",
+            comment: "",
+            duration: 1 * 60,
+            date: "2021-05-30"
+        },
+        {
+            project: "ABC-123",
+            comment: "",
+            duration: 2 * 60,
+            date: "2021-05-31"
+        },
+        {
+            project: "ABC-123",
+            comment: "",
+            duration: 3 * 60,
+            date: "2021-05-30"
+        },
+    ];
+    const data3 = [
+        {
+            project: "ABC-111",
+            comment: "",
+            duration: 1 * 60,
+            date: "2021-05-30"
+        },
+        {
+            project: "ABC-222",
+            comment: "",
+            duration: 2 * 60,
+            date: "2021-05-30"
+        },
+        {
+            project: "ABC-333",
+            comment: "",
+            duration: 3 * 60,
+            date: "2021-05-30"
+        },
+    ];
+    
+    test(data);
+    console.log("______");
+    test(data2);
+    console.log("______");
+    test(data3);
+
+}
+
+function miscTests() {
+
+    const config = window.config;
+    const data = window.data.base;
+    const processedData = processData(data);
+    const groupedData = groupData(processedData);
+    const filteredData = filterData(groupedData, config);
+    filteredData.forEach(a => console.log(getReportContent(a.items)));
+
+    const sums = sum(filteredData);
+
+    // const groupedByDate = groupByDate(items);
+    // groupedByDate.map(a => ({ date: a.date, items: sum(a.items).map(a => ({ projectName: a.projectName, originalDurationStr: timeFormat(a.originalDuration, true), duration: a.duration, originalDuration: a.originalDuration })) }))
+    //     .forEach(a => { console.log(a.date); console.log(a.items); })    
 }
 
 
@@ -143,7 +223,6 @@ function sum(items) {
 
     return summed.map(a => ({ projectName: a.projectName, durationStr: timeFormat(a.duration, true), originalDurationStr: timeFormat(a.originalDuration, true), duration: a.duration, originalDuration: a.originalDuration }));
 }
-
 
 function groupByDate(data) {
     let month = [];
