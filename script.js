@@ -111,6 +111,7 @@ async function getDataAsync(from, to, workspaceId) {
         url = `https://track.toggl.com/reports/api/v2/details.json?workspace_id=${workspace_id}&start_date=${from}&end_date=${to}&start=${start}&order_by=date&order_dir=asc&date_format=MM/DD/YYYY&order_field=date&order_desc=false&since=${from}&until=${to}&page=${paging}&user_agent=Toggl%20New%205.10.10&bars_count=31&subgrouping_ids=true&bookmark_token=`
         var response = await fetch(url);
         var data = await response.json();
+        console.log('data: ', data);
         records = records.concat(data.data);
 
         totalCount = data.total_count
@@ -182,14 +183,27 @@ function getDateRange(mode) {
     }
 }
 
-function getWorkspaceId() {
-    console.log('window.location.pathname: ', window.location.pathname);
-    const matched = window.location.pathname.match("(.*)\/(?<reports>.*)\/(?<type>.*)\/(?<workspaceId>.*)")
-    if (!matched || !matched.groups["workspaceId"]) {
-        console.error("User id not found!");
-        return undefined;
+function getWorkspaceId() {    
+    const url = window.location.pathname;        
+    var rest = url.replace("https://", "");
+    
+    rest = rest.substring(rest.indexOf("\/") + 1);//odstranění stránky    
+    rest = rest.substring(rest.indexOf("\/") + 1);//odstranění reports    
+    rest = rest.substring(rest.indexOf("\/") + 1);//odstranění summary/detailed/weekly
+
+    let id = "";
+    //pokud je v url od do, tak obsahuje další lomítko, jinak ne
+    if (rest.indexOf("\/") > 0) {
+        id = rest.substring(0, rest.indexOf("\/"));
+        rest = rest.substring(rest.indexOf("\/") + 1);
     }
-    return matched.groups["workspaceId"];
+    else {
+
+        id = rest;
+        rest = "";
+    }
+
+    return id;
 }
 
 (async function () {
@@ -198,7 +212,7 @@ function getWorkspaceId() {
     const workspaceId = getWorkspaceId();
     if (!workspaceId)
         return;
-        
+
     const data = await getDataAsync(from, to, workspaceId);
     const processedData = processData(data);
     const groupedData = groupData(processedData, config.roundDuration);

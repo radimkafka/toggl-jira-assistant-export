@@ -40,6 +40,8 @@ const baseConfig = {
 }
 
 function test() {
+    getWorkspaceId();
+    return;
     const config = window.config;
     const data = window.data.base;
     const processedData = processData(data);
