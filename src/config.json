@@ -1,5 +1,5 @@
 {
-    "roundDuration": true,
+    "roundDuration": false,
     "filter": [
         {
             "filename": "PPL",
@@ -11,12 +11,14 @@
             ]
         },
         {
-            "filename": "elx",
+            "filename": "ELX",
             "restAs": "BEI-27",
             "includedProjects": [
                 "BEI",
                 "RED",
-                "ESA"
+                "ESA",
+                "SWE",
+                "OLZA"
             ]
         }
     ]

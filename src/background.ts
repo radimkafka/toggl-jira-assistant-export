@@ -34,6 +34,7 @@ const contextItemMain = {
     title: 'Toggle jira report',
     type: 'normal',
     visible: true,
+    targetUrlPatterns: ['https://track.toggl.com/reports/*']
 };
 
 const contextItemThisMonth = {
@@ -43,6 +44,7 @@ const contextItemThisMonth = {
     title: 'This month',
     type: 'normal',
     visible: true,
+    targetUrlPatterns: ['https://track.toggl.com/reports/*']
 };
 
 const contextItemPrevMonth = {
@@ -52,6 +54,7 @@ const contextItemPrevMonth = {
     title: 'Previous month',
     type: 'normal',
     visible: true,
+    targetUrlPatterns: ['https://track.toggl.com/reports/*']
 };
 const contextItemCustom = {
     contexts: ['page'],
@@ -59,7 +62,8 @@ const contextItemCustom = {
     id: 'toggle_jira_report_custom',
     title: 'From url',
     type: 'normal',
-    visible: true
+    visible: true,
+    targetUrlPatterns: ['https://track.toggl.com/reports/*']
 };
 
 
