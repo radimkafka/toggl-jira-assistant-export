@@ -8,6 +8,7 @@ import {
   TogglReportItem,
   TogglResponse,
   ConfigFilterItem,
+  ConfigApiKeyLocation,
 } from "./types";
 
 function download(filename: string, text: string) {
@@ -228,7 +229,7 @@ function getConfigFromStorageAsync(): Promise<Config> {
   });
 }
 
-async function getDataAsync(from: string, to: string, workspaceId: string): Promise<TogglReportItem[]> {
+async function getDataAsync(from: string, to: string, workspaceId: string, apiToken: string): Promise<TogglReportItem[]> {
   let start = 1;
   let paging = 1;
   let workspace_id = workspaceId;
@@ -238,9 +239,10 @@ async function getDataAsync(from: string, to: string, workspaceId: string): Prom
   let loadedData = 0;
 
   let records: TogglReportItem[] = [];
+  const authHeader = `Basic ${btoa(`${apiToken}:api_token`)}`;
   do {
     url = `https://track.toggl.com/reports/api/v2/details.json?workspace_id=${workspace_id}&start_date=${from}&end_date=${to}&start=${start}&order_by=date&order_dir=asc&date_format=MM/DD/YYYY&order_field=date&order_desc=false&since=${from}&until=${to}&page=${paging}&user_agent=Toggl%20New%205.10.10&bars_count=31&subgrouping_ids=true&bookmark_token=`;
-    var response = await fetch(url);
+    var response = await fetch(url, { method: "GET", headers: { Authorization: authHeader } });
     var data: TogglResponse = await response.json();
     records = records.concat(data.data);
 
@@ -336,13 +338,28 @@ function getWorkspaceId(): string {
   return id;
 }
 
+function getApiToken(location: ConfigApiKeyLocation = { key: "/api/v8/me", storage: "session", propertyName: "api_token" }) {
+  const storage = location.storage === "session" ? sessionStorage : localStorage;
+  const me = JSON.parse(storage.getItem(location.key) ?? "null");
+  return me?.[location.propertyName];
+}
+
 (async function () {
   const config = await getConfigFromStorageAsync();
   const [from, to] = getDateRange(config.dateMode);
   const workspaceId = getWorkspaceId();
-  if (!workspaceId) return;
+  if (!workspaceId) {
+    console.warn("Workspace not found!");
+    return;
+  }
 
-  const data = await getDataAsync(from, to, workspaceId);
+  const apiToken = getApiToken(config.apiKeyLocation);
+  if (!apiToken) {
+    console.warn("Api token not found!");
+    return;
+  }
+
+  const data = await getDataAsync(from, to, workspaceId, apiToken);
   const processedData = processData(data);
 
   const groupedData = groupData(processedData);

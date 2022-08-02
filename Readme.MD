@@ -1,5 +1,19 @@
 # Change log
 
+### v1.2.0
+- použití autorizace(api key)
+- přidání do konfigu možnost nastavení odkud se token bere
+```
+{
+  apiKeyLocation:  {
+  storage: "session", // session/local
+  key: "klíčVeStrage",
+  propertyName: "api_key"
+};
+}
+```
+- default je storage:"session", key:"/api/v8/me", propertyName:"api_token"
+
 ### v1.1.0
 
 - Možnost tagování záznamů
@@ -60,7 +74,7 @@
 
 ## 1. spuštění
 
-Detail-> Stáhnout Csv -> Stáhnout report
+Detail-> Stáhnout Csv -> Stáhnout report // od verze 1.2.0 by nemělo být potřeba
 
 #
 
@@ -69,3 +83,4 @@ Detail-> Stáhnout Csv -> Stáhnout report
 npx tsc
 
 - Smazat Object.defineProperty(exports, "\_\_esModule", { value: true }); jinak se to chromu nebude líbit
+- ts errory nevadí

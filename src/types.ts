@@ -63,11 +63,18 @@ export interface CommentItem {
   value: string;
 }
 
+export type ConfigApiKeyLocation = {
+  storage: "local" | "session";
+  key: string;
+  propertyName: string;
+};
+
 export interface Config {
   dateMode: "custom" | "thisMonth" | "prevMonth";
   roundDuration?: boolean;
   includeSeconds?: boolean;
   filter: ConfigFilterItem[];
+  apiKeyLocation?: ConfigApiKeyLocation;
 }
 
 export interface ConfigFilterItem {
