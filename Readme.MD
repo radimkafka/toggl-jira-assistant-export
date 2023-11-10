@@ -1,7 +1,7 @@
 # Change log
 
 ### v1.3.0
-- přidání do konfigu roundToMinutes umožňující zaokrouhlovat na čas na daný počet minut. Hodnota musí bezezbytku dělit 60(2,5,10,15,...) pro správnou funkčnost.
+- přidání do konfigu roundToMinutes umožňující zaokrouhlovat čas na daný počet minut. Hodnota musí bezezbytku dělit 60(2,5,10,15,...) pro správnou funkčnost.
 
 ### v1.2.0
 - použití autorizace(api key)
