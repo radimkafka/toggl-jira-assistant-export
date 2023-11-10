@@ -88,7 +88,11 @@ function filterData(data: GroupedReportItem[], config: Config): { name: string; 
   return config.filter.map(a => {
     const transformedProjectNames = a.transformations?.map(a => a.sourceProjectName) ?? [];
 
-    const grouped = data.reduce<{ transformed: GroupedReportItem[]; included: GroupedReportItem[]; rest: GroupedReportItem[] }>(
+    const grouped = data.reduce<{
+      transformed: GroupedReportItem[];
+      included: GroupedReportItem[];
+      rest: GroupedReportItem[];
+    }>(
       (acc, d) =>
         a.includedProjects.includes(d.projectName)
           ? { ...acc, included: [...acc.included, d] }
@@ -229,7 +233,12 @@ function getConfigFromStorageAsync(): Promise<Config> {
   });
 }
 
-async function getDataAsync(from: string, to: string, workspaceId: string, apiToken: string): Promise<TogglReportItem[]> {
+async function getDataAsync(
+  from: string,
+  to: string,
+  workspaceId: string,
+  apiToken: string
+): Promise<TogglReportItem[]> {
   let start = 1;
   let paging = 1;
   let workspace_id = workspaceId;
@@ -338,10 +347,14 @@ function getWorkspaceId(): string {
   return id;
 }
 
-function getApiToken(location: ConfigApiKeyLocation = { key: "/api/v8/me", storage: "session", propertyName: "api_token" }) {
-  const storage = location.storage === "session" ? sessionStorage : localStorage;
-  const me = JSON.parse(storage.getItem(location.key) ?? "null");
-  return me?.[location.propertyName];
+function getApiToken(location?: ConfigApiKeyLocation) {
+  const locationKey = location?.key ?? "/api/v8/me";
+  const locationStorage = location?.storage ?? "session";
+  const locationPropertyName = location?.propertyName ?? "api_token";
+
+  const storage = locationStorage === "session" ? sessionStorage : localStorage;
+  const me = JSON.parse(storage.getItem(locationKey) ?? "null");
+  return me?.[locationPropertyName];
 }
 
 (async function () {

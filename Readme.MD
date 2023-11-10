@@ -6,9 +6,9 @@
 ```
 {
   apiKeyLocation:  {
-  storage: "session", // session/local
-  key: "klíčVeStrage",
-  propertyName: "api_key"
+  storage: "session", // session/local - default "session"
+  key: "klíčVeStrage", // default "/api/v8/me"
+  propertyName: "api_key" // defalt "api_token"
 };
 }
 ```
