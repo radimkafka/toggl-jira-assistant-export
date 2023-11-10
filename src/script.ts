@@ -108,7 +108,10 @@ function filterData(data: GroupedReportItem[], config: Config): { name: string; 
       ...(a.restAs ? grouped.rest.map(i => getReportData(updateRestName(i, a))) : []),
     ];
 
-    return { name: a.filename, items: config?.roundDuration ? roundDurations(itemsForReport) : itemsForReport };
+    return {
+      name: a.filename,
+      items: config?.roundDuration ? roundDurations(itemsForReport, config?.roundToMinutes) : itemsForReport,
+    };
   });
 }
 
@@ -121,12 +124,12 @@ function getReportData(item: GroupedReportItem): ReportData {
   };
 }
 
-function roundDurations(data: ReportData[]) {
+function roundDurations(data: ReportData[], roundToMinutes?: number) {
   const sortedData = data.sort((a, b) => a.project.localeCompare(b.project));
   let restOfRounding = 0;
   return sortedData
     .map(a => {
-      let rounded = roundDuration(a.duration + restOfRounding);
+      let rounded = roundDuration(a.duration + restOfRounding, roundToMinutes);
       restOfRounding += a.duration - rounded;
       return { ...a, duration: rounded };
     })
@@ -278,11 +281,12 @@ function dateStringFormat(dateString: string) {
   return dateFormat(date);
 }
 
-function roundDuration(worklogItemDuration: number): number {
-  const modulo = worklogItemDuration % (60 * 5);
+function roundDuration(worklogItemDuration: number, roundToMinutes: number = 5): number {
+  const roundToSeconds = 60 * roundToMinutes;
+  const modulo = worklogItemDuration % roundToSeconds;
   let add = 0;
-  if (modulo >= 150) {
-    add = 300 - modulo;
+  if (modulo >= roundToSeconds / 2) {
+    add = roundToSeconds - modulo;
   } else {
     add = -1 * modulo;
   }
@@ -348,7 +352,7 @@ function getWorkspaceId(): string {
 }
 
 function getApiToken(location?: ConfigApiKeyLocation) {
-  const locationKey = location?.key ?? "/api/v8/me";
+  const locationKey = location?.key ?? "/api/v9/me";
   const locationStorage = location?.storage ?? "session";
   const locationPropertyName = location?.propertyName ?? "api_token";
 

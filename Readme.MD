@@ -1,14 +1,17 @@
 # Change log
 
+### v1.3.0
+- přidání do konfigu roundToMinutes umožňující zaokrouhlovat na čas na daný počet minut. Hodnota musí bezezbytku dělit 60(2,5,10,15,...) pro správnou funkčnost.
+
 ### v1.2.0
 - použití autorizace(api key)
 - přidání do konfigu možnost nastavení odkud se token bere
 ```
 {
   apiKeyLocation:  {
-  storage: "session", // session/local - default "session"
-  key: "klíčVeStrage", // default "/api/v8/me"
-  propertyName: "api_key" // defalt "api_token"
+  storage: "session",
+  key: "klíčVeStrage",
+  propertyName: "api_key"
 };
 }
 ```

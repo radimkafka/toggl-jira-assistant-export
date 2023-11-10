@@ -72,6 +72,7 @@ export type ConfigApiKeyLocation = {
 export interface Config {
   dateMode: "custom" | "thisMonth" | "prevMonth";
   roundDuration?: boolean;
+  roundToMinutes?: number;
   includeSeconds?: boolean;
   filter: ConfigFilterItem[];
   apiKeyLocation?: ConfigApiKeyLocation;
