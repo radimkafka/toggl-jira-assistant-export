@@ -9,7 +9,7 @@
 ```
 {
   apiKeyLocation:  {
-  storage: "session",
+  storage: "session", // session/local
   key: "klíčVeStrage",
   propertyName: "api_key"
 };
