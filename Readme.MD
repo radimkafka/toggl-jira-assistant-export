@@ -1,5 +1,9 @@
 # Change log
 
+### v1.3.0
+- přidání do konfigu roundToMinutes umožňující zaokrouhlovat čas na daný počet minut. Hodnota musí bezezbytku dělit 60(2,5,10,15,...) pro správnou funkčnost.
+- výchozí hodnota apiKeyLocation.key změněna na /api/v9/me
+
 ### v1.2.0
 - použití autorizace(api key)
 - přidání do konfigu možnost nastavení odkud se token bere
@@ -12,16 +16,14 @@
 };
 }
 ```
-- default je storage:"session", key:"/api/v8/me", propertyName:"api_token"
+- default je storage:"session", key:"/api/v9/me", propertyName:"api_token"
 
 ### v1.1.0
-
 - Možnost tagování záznamů
 - Zaokrouhlování časů až po groupování
 - Transformace tasků
 
 # Config
-
 ```
 {
     roundDuration: boolean;
@@ -30,7 +32,6 @@
 ```
 
 ### ConfigFilterItem
-
 ```
 {
     filename: string;
@@ -41,7 +42,6 @@
 ```
 
 ### ConfigTransfromationItem
-
 ```
 {
     sourceProjectName: string;
@@ -49,24 +49,31 @@
 }
 ```
 
-### Příklad
-
+### Příklad konfigu
 ```
 {
-    roundDuration: false,
-    filter: [
+  "roundDuration": true,
+  "roundToMinutes": 10,
+  "filter": [
     {
-      filename: "elx",
-      restAs: "RestAs-101",
-      includedProjects: ["Test"],
-      transformations: [
-        {
-          sourceProjectName: "ToBeTransformed",
-          destinationProject: "Transformed-101",
-        }
+      "filename": "elx",
+      "restAs": "RestAs-101",
+      "includedProjects": [
+        "Test"
       ],
+      "transformations": [
+        {
+          "sourceProjectName": "ToBeTransformed",
+          "destinationProject": "Transformed-101"
+        }
+      ]
     }
   ],
+  "apiKeyLocation": {
+    "storage": "session",
+    "key": "/api/v9/me",
+    "propertyName": "api_token"
+  }
 }
 ```
 
