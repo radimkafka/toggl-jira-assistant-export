@@ -2,6 +2,7 @@
 
 ### v1.3.0
 - přidání do konfigu roundToMinutes umožňující zaokrouhlovat čas na daný počet minut. Hodnota musí bezezbytku dělit 60(2,5,10,15,...) pro správnou funkčnost.
+- výchozí hodnota apiKeyLocation.key změněna na /api/v9/me
 
 ### v1.2.0
 - použití autorizace(api key)
@@ -15,7 +16,7 @@
 };
 }
 ```
-- default je storage:"session", key:"/api/v8/me", propertyName:"api_token"
+- default je storage:"session", key:"/api/v9/me", propertyName:"api_token"
 
 ### v1.1.0
 - Možnost tagování záznamů
