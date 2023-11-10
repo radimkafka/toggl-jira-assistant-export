@@ -18,13 +18,11 @@
 - default je storage:"session", key:"/api/v8/me", propertyName:"api_token"
 
 ### v1.1.0
-
 - Možnost tagování záznamů
 - Zaokrouhlování časů až po groupování
 - Transformace tasků
 
 # Config
-
 ```
 {
     roundDuration: boolean;
@@ -33,7 +31,6 @@
 ```
 
 ### ConfigFilterItem
-
 ```
 {
     filename: string;
@@ -44,7 +41,6 @@
 ```
 
 ### ConfigTransfromationItem
-
 ```
 {
     sourceProjectName: string;
@@ -52,24 +48,31 @@
 }
 ```
 
-### Příklad
-
+### Příklad konfigu
 ```
 {
-    roundDuration: false,
-    filter: [
+  "roundDuration": true,
+  "roundToMinutes": 10,
+  "filter": [
     {
-      filename: "elx",
-      restAs: "RestAs-101",
-      includedProjects: ["Test"],
-      transformations: [
-        {
-          sourceProjectName: "ToBeTransformed",
-          destinationProject: "Transformed-101",
-        }
+      "filename": "elx",
+      "restAs": "RestAs-101",
+      "includedProjects": [
+        "Test"
       ],
+      "transformations": [
+        {
+          "sourceProjectName": "ToBeTransformed",
+          "destinationProject": "Transformed-101"
+        }
+      ]
     }
   ],
+  "apiKeyLocation": {
+    "storage": "session",
+    "key": "/api/v9/me",
+    "propertyName": "api_token"
+  }
 }
 ```
 
