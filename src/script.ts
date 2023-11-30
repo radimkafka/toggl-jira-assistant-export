@@ -310,11 +310,23 @@ function getDateRagePreviousMonth(): [string, string] {
 
 function getDateRangeFromUrl(): [string, string] {
   const matched = window.location.pathname.match("from/(?<from>....-..-..)/to/(?<to>(....-..-..))");
-  if (!matched?.groups?.["from"] || !matched?.groups?.["to"]) {
-    console.warn("Date not found in URL. Date range set to last month.");
-    return getDateRagePreviousMonth();
+  if (matched?.groups?.["from"] && matched?.groups?.["to"]) {
+    return [matched.groups["from"], matched?.groups["to"]];
+  } else if (window.location.pathname.endsWith("/period/today")) {
+  } else if (window.location.pathname.endsWith("/period/yesterday")) {
+  } else if (window.location.pathname.endsWith("/period/thisWeek")) {
+  } else if (window.location.pathname.endsWith("/period/prevWeek")) {
+  } else if (window.location.pathname.endsWith("/period/thisMonth")) {
+  } else if (window.location.pathname.endsWith("/period/prevMonth")) {
+  } else if (window.location.pathname.endsWith("/period/last30Days")) {
+  } else if (window.location.pathname.endsWith("/period/last90Days")) {
+  } else if (window.location.pathname.endsWith("/period/last12Months")) {
+  } else if (window.location.pathname.endsWith("/period/thisYear")) {
+  } else if (window.location.pathname.endsWith("/period/prevYear")) {
   }
-  return [matched.groups["from"], matched?.groups["to"]];
+
+  console.warn("Date not found in URL. Date range set to last month.");
+  return getDateRagePreviousMonth();
 }
 
 function getDateRange(mode: "custom" | "thisMonth" | "prevMonth"): [string, string] {
