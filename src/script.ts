@@ -341,7 +341,9 @@ function getDateRangeFromUrl(): [string, string] {
     firstDayOfMonth.setDate(1);
 
     const lastDayOfMonth = new Date();
-    lastDayOfMonth.setDate(lastDayOfMonth.getDate() - lastDayOfMonth.getDay());
+    lastDayOfMonth.setDate(1);
+    lastDayOfMonth.setMonth(lastDayOfMonth.getMonth() + 1);
+    lastDayOfMonth.setDate(-1);
 
     return [formatDate(firstDayOfMonth), formatDate(lastDayOfMonth)];
   } else if (window.location.pathname.endsWith("/period/prevMonth")) {
@@ -367,7 +369,7 @@ function getDateRangeFromUrl(): [string, string] {
     return [formatDate(date), formatDate(new Date())];
   } else if (window.location.pathname.endsWith("/period/last12Months")) {
     const date = new Date();
-    date.setDate(-90);
+    date.setFullYear(date.getFullYear() - 1);
 
     return [formatDate(date), formatDate(new Date())];
   } else if (window.location.pathname.endsWith("/period/thisYear")) {
@@ -389,7 +391,7 @@ function getDateRangeFromUrl(): [string, string] {
 }
 
 function formatDate(date: Date) {
-  return `${date.getFullYear}-${date.getMonth()}-${date.getDate()}`;
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 }
 
 function getDateRange(mode: "custom" | "thisMonth" | "prevMonth"): [string, string] {
