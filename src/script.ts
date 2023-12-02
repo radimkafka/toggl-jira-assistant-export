@@ -313,20 +313,83 @@ function getDateRangeFromUrl(): [string, string] {
   if (matched?.groups?.["from"] && matched?.groups?.["to"]) {
     return [matched.groups["from"], matched?.groups["to"]];
   } else if (window.location.pathname.endsWith("/period/today")) {
+    const today = formatDate(new Date());
+    return [today, today];
   } else if (window.location.pathname.endsWith("/period/yesterday")) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayFormated = formatDate(yesterday);
+    return [yesterdayFormated, yesterdayFormated];
   } else if (window.location.pathname.endsWith("/period/thisWeek")) {
+    const firstDayOfWeek = new Date();
+    firstDayOfWeek.setDate(firstDayOfWeek.getDate() - firstDayOfWeek.getDay() + 1);
+
+    const lastDayOfWeek = new Date();
+    lastDayOfWeek.setDate(lastDayOfWeek.getDate() + 7 - lastDayOfWeek.getDay());
+
+    return [formatDate(firstDayOfWeek), formatDate(lastDayOfWeek)];
   } else if (window.location.pathname.endsWith("/period/prevWeek")) {
+    const firstDayOfWeek = new Date();
+    firstDayOfWeek.setDate(firstDayOfWeek.getDate() - firstDayOfWeek.getDay() + 1 - 7);
+
+    const lastDayOfWeek = new Date();
+    lastDayOfWeek.setDate(lastDayOfWeek.getDate() + 7 - lastDayOfWeek.getDay() - 7);
+
+    return [formatDate(firstDayOfWeek), formatDate(lastDayOfWeek)];
   } else if (window.location.pathname.endsWith("/period/thisMonth")) {
+    const firstDayOfMonth = new Date();
+    firstDayOfMonth.setDate(1);
+
+    const lastDayOfMonth = new Date();
+    lastDayOfMonth.setDate(lastDayOfMonth.getDate() - lastDayOfMonth.getDay());
+
+    return [formatDate(firstDayOfMonth), formatDate(lastDayOfMonth)];
   } else if (window.location.pathname.endsWith("/period/prevMonth")) {
+    const firstDayOfMonth = new Date();
+    firstDayOfMonth.setDate(1);
+    firstDayOfMonth.setDate(-1);
+    firstDayOfMonth.setDate(1);
+
+    const lastDayOfMonth = new Date();
+    firstDayOfMonth.setDate(1);
+    firstDayOfMonth.setDate(-1);
+
+    return [formatDate(firstDayOfMonth), formatDate(lastDayOfMonth)];
   } else if (window.location.pathname.endsWith("/period/last30Days")) {
+    const date = new Date();
+    date.setDate(-30);
+
+    return [formatDate(date), formatDate(new Date())];
   } else if (window.location.pathname.endsWith("/period/last90Days")) {
+    const date = new Date();
+    date.setDate(-90);
+
+    return [formatDate(date), formatDate(new Date())];
   } else if (window.location.pathname.endsWith("/period/last12Months")) {
+    const date = new Date();
+    date.setDate(-90);
+
+    return [formatDate(date), formatDate(new Date())];
   } else if (window.location.pathname.endsWith("/period/thisYear")) {
+    const today = new Date();
+    const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+
+    const lastDayOfYear = new Date(today.getFullYear(), 11, 31);
+    return [formatDate(firstDayOfYear), formatDate(lastDayOfYear)];
   } else if (window.location.pathname.endsWith("/period/prevYear")) {
+    const today = new Date();
+    const firstDayOfYear = new Date(today.getFullYear() - 1, 0, 1);
+
+    const lastDayOfYear = new Date(today.getFullYear() - 1, 11, 31);
+    return [formatDate(firstDayOfYear), formatDate(lastDayOfYear)];
   }
 
   console.warn("Date not found in URL. Date range set to last month.");
   return getDateRagePreviousMonth();
+}
+
+function formatDate(date: Date) {
+  return `${date.getFullYear}-${date.getMonth()}-${date.getDate()}`;
 }
 
 function getDateRange(mode: "custom" | "thisMonth" | "prevMonth"): [string, string] {
