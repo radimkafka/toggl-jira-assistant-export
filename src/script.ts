@@ -238,8 +238,10 @@ function getConfigFromStorageAsync(): Promise<Config> {
   });
 }
 
-async function getDataAsync(from: string, to: string, authHeader: string): Promise<TimeEntry[]> {
-  const url = `https://track.toggl.com/api/v9/me/time_entries?start_date=${from}&end_date=${to}`;
+async function getDataAsync(dateFrom: string, dateTo: string, authHeader: string): Promise<TimeEntry[]> {
+  const dateTimeFrom = `${dateFrom}T00:00:00.000Z`;
+  const dateTimeTo = `${dateTo}T23:59:59.999Z`;
+  const url = `https://track.toggl.com/api/v9/me/time_entries?start_date=${dateTimeFrom}&end_date=${dateTimeTo}`;
   const response = await fetch(url, {
     method: "GET",
     headers: { Authorization: authHeader },
