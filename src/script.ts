@@ -10,6 +10,7 @@ import {
   ConfigFilterItem,
   ConfigApiKeyLocation,
   TimeEntry,
+  Project,
 } from "./types";
 
 function download(filename: string, text: string) {
@@ -20,11 +21,11 @@ function download(filename: string, text: string) {
   hiddenElement.click();
 }
 
-function processData(data: TogglReportItem[]): ReportItem[] {
-  return data.map(a => createReportItem(a));
+function processData(data: TimeEntry[], projects: Project[]): ReportItem[] {
+  return data.map(a => createReportItem(a, projects));
 }
 
-function createReportItem(togglReportItem: TogglReportItem): ReportItem {
+function createReportItem(togglReportItem: TogglReportItem, projects: Project[]): ReportItem {
   const itemProject = togglReportItem.project;
   const itemDuration = Math.round(togglReportItem.dur / 1000);
   const itemDate = dateStringFormat(togglReportItem.start);
@@ -237,15 +238,22 @@ function getConfigFromStorageAsync(): Promise<Config> {
   });
 }
 
-async function getDataAsync(from: string, to: string, workspaceId: string, apiToken: string): Promise<TimeEntry[]> {
+async function getDataAsync(from: string, to: string, authHeader: string): Promise<TimeEntry[]> {
   const url = `https://api.track.toggl.com/api/v9/me/time_entries?start_date=${from}&end_date=${to}`;
-  const authHeader = `Basic ${btoa(`${apiToken}:api_token`)}`;
-
   const response = await fetch(url, {
     method: "GET",
     headers: { Authorization: authHeader },
   });
   return (await response.json()) as Promise<TimeEntry[]>;
+}
+
+async function getProjectsAsync(workspaceId: string, authHeader: string): Promise<Project[]> {
+  const url = `https://api.track.toggl.com/api/v9/workspaces/${workspaceId}/projects`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: { Authorization: authHeader },
+  });
+  return (await response.json()) as Promise<Project[]>;
 }
 
 function dateFormat(date: Date) {
@@ -356,8 +364,11 @@ function getApiToken(location?: ConfigApiKeyLocation) {
     return;
   }
 
-  const data = await getDataAsync(from, to, workspaceId, apiToken);
-  const processedData = processData(data);
+  const authHeader = `Basic ${btoa(`${apiToken}:api_token`)}`;
+
+  const projects = await getProjectsAsync(workspaceId, authHeader);
+  const data = await getDataAsync(from, to, authHeader);
+  const processedData = processData(data, projects);
 
   const groupedData = groupData(processedData);
   const filteredData = filterData(groupedData, config);
