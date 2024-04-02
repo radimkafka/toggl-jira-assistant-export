@@ -103,7 +103,7 @@ export type TimeEntry = {
   /** Time Entry description, null if not provided at creation/update */
   description: string;
 
-  /** Time entry duration. For running entries should be negative, preferable -1 */
+  /** Time entry duration in seconds. For running entries should be negative, preferable -1 */
   duration: number;
 
   /** Used to create a TE with a duration but without a stop time, this field is deprecated for GET endpoints where the value will always be true. */

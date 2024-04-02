@@ -25,21 +25,21 @@ function processData(data: TimeEntry[], projects: Project[]): ReportItem[] {
   return data.map(a => createReportItem(a, projects));
 }
 
-function createReportItem(togglReportItem: TogglReportItem, projects: Project[]): ReportItem {
-  const itemProject = togglReportItem.project;
-  const itemDuration = Math.round(togglReportItem.dur / 1000);
-  const itemDate = dateStringFormat(togglReportItem.start);
+function createReportItem(timeEntry: TimeEntry, projects: Project[]): ReportItem {
+  const projectName = projects.find(a => a.id === timeEntry.project_id)?.name ?? "NoProject";
+  const durationInSeconds = timeEntry.duration;
+  const date = dateStringFormat(timeEntry.start);
 
-  const comments = parseComment(togglReportItem.description);
+  const comments = parseComment(timeEntry.description);
   const projectNumber = comments.find(a => a.type === "projectNumber")?.value ?? "NoProject";
-  if (projectNumber === "NoProject") console.warn("Item without project!", togglReportItem);
+  if (projectNumber === "NoProject") console.warn("Item without project!", timeEntry);
 
   let reportItem: ReportItem = {
-    date: itemDate,
-    duration: itemDuration,
-    projectName: itemProject,
-    projectNumber: projectNumber,
-    project: `${itemProject}-${projectNumber}`,
+    date,
+    duration: durationInSeconds,
+    projectName,
+    projectNumber,
+    project: `${projectName}-${projectNumber}`,
     comment: comments
       .filter(a => a.type === "Comment")
       .map(a => a.value)
