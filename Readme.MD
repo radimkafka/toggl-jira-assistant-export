@@ -1,4 +1,6 @@
 # Change log
+### v1.4.0
+- Použití api/v9 na získání dat 
 
 ### v1.3.0
 - přidání do konfigu roundToMinutes umožňující zaokrouhlovat čas na daný počet minut. Hodnota musí bezezbytku dělit 60(2,5,10,15,...) pro správnou funkčnost.

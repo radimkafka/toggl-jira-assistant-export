@@ -2,9 +2,15 @@
   "name": "Toggl jira report",
   "action": {},
   "manifest_version": 3,
-  "version": "1.2.0",
+  "version": "1.4.0",
   "description": "",
-  "permissions": ["contextMenus", "activeTab", "tabs", "scripting", "storage"],
+  "permissions": [
+    "contextMenus",
+    "activeTab",
+    "tabs",
+    "scripting",
+    "storage"
+  ],
   "background": {
     "service_worker": "background.js"
   }
