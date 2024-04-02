@@ -239,7 +239,7 @@ function getConfigFromStorageAsync(): Promise<Config> {
 }
 
 async function getDataAsync(from: string, to: string, authHeader: string): Promise<TimeEntry[]> {
-  const url = `https://api.track.toggl.com/api/v9/me/time_entries?start_date=${from}&end_date=${to}`;
+  const url = `https://track.toggl.com/api/v9/me/time_entries?start_date=${from}&end_date=${to}`;
   const response = await fetch(url, {
     method: "GET",
     headers: { Authorization: authHeader },
@@ -248,7 +248,7 @@ async function getDataAsync(from: string, to: string, authHeader: string): Promi
 }
 
 async function getProjectsAsync(workspaceId: string, authHeader: string): Promise<Project[]> {
-  const url = `https://api.track.toggl.com/api/v9/workspaces/${workspaceId}/projects`;
+  const url = `https://track.toggl.com/api/v9/workspaces/${workspaceId}/projects`;
   const response = await fetch(url, {
     method: "GET",
     headers: { Authorization: authHeader },
