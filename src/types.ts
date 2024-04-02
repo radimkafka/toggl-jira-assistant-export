@@ -89,3 +89,81 @@ export interface ConfigTransfromationItem {
   sourceProjectName: string;
   destinationProject: string;
 }
+
+export type TimeEntry = {
+  // When was last updated
+  at: string;
+
+  // Whether the time entry is marked as billable
+  billable: boolean;
+
+  // Related entities meta fields - if requested
+  client_name: string | null;
+
+  // Time Entry description, null if not provided at creation/update
+  description: string;
+
+  // Time entry duration. For running entries should be negative, preferable -1
+  duration: number;
+
+  // Used to create a TE with a duration but without a stop time, this field is deprecated for GET endpoints where the value will always be true.
+  duronly: boolean;
+
+  // Time Entry ID
+  id: number;
+
+  // Permission list
+  permissions: Array<string>;
+
+  // Project ID, legacy field
+  pid: number;
+  project_active: boolean;
+  project_color: string | null;
+
+  // Project ID. Can be null if project was not provided or project was later deleted
+  project_id: number;
+
+  project_name: string | null;
+
+  // When was deleted, null if not deleted
+  server_deleted_at: string;
+
+  // Indicates who the time entry has been shared with
+  shared_with: Array<{
+    accepted: boolean;
+
+    user_id: number;
+    user_name: string;
+  }>;
+
+  // Start time in UTC
+  start: string;
+
+  // Stop time in UTC, can be null if it's still running or created with "duration" and "duronly" fields
+  stop: string;
+
+  // Tag IDs, null if tags were not provided or were later deleted
+  tag_ids: Array<number>;
+
+  // Tag names, null if tags were not provided or were later deleted
+  tags: Array<string>;
+
+  // Task ID. Can be null if task was not provided or project was later deleted
+  task_id: number | null;
+  task_name: string;
+
+  // Task ID, legacy field
+  tid: number;
+
+  // Time Entry creator ID, legacy field
+  uid: number;
+
+  // Time Entry creator ID
+  user_id: number;
+
+  // Workspace ID, legacy field
+  wid: number;
+
+  // Workspace ID
+  workspace_id: number;
+};

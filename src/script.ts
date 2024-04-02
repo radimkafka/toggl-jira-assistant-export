@@ -9,6 +9,7 @@ import {
   TogglResponse,
   ConfigFilterItem,
   ConfigApiKeyLocation,
+  TimeEntry,
 } from "./types";
 
 function download(filename: string, text: string) {
@@ -32,7 +33,7 @@ function createReportItem(togglReportItem: TogglReportItem): ReportItem {
   const projectNumber = comments.find(a => a.type === "projectNumber")?.value ?? "NoProject";
   if (projectNumber === "NoProject") console.warn("Item without project!", togglReportItem);
 
-  var reportItem: ReportItem = {
+  let reportItem: ReportItem = {
     date: itemDate,
     duration: itemDuration,
     projectName: itemProject,
@@ -159,7 +160,7 @@ function parseComment(comment: string) {
       commentItems.push(getCommentItem(commentRest));
       break;
     }
-    var value = commentRest.slice(0, index + 1);
+    let value = commentRest.slice(0, index + 1);
     commentItems.push(getCommentItem(value));
     commentRest = commentRest.slice(index + 1, commentRest.length);
   } while (index !== -1);
@@ -236,36 +237,15 @@ function getConfigFromStorageAsync(): Promise<Config> {
   });
 }
 
-async function getDataAsync(
-  from: string,
-  to: string,
-  workspaceId: string,
-  apiToken: string
-): Promise<TogglReportItem[]> {
-  let start = 1;
-  let paging = 1;
-  let workspace_id = workspaceId;
-  let url = "";
-
-  let totalCount = 0;
-  let loadedData = 0;
-
-  let records: TogglReportItem[] = [];
+async function getDataAsync(from: string, to: string, workspaceId: string, apiToken: string): Promise<TimeEntry[]> {
+  const url = `https://api.track.toggl.com/api/v9/me/time_entries?start_date=${from}&end_date=${to}`;
   const authHeader = `Basic ${btoa(`${apiToken}:api_token`)}`;
-  do {
-    url = `https://track.toggl.com/reports/api/v2/details.json?workspace_id=${workspace_id}&start_date=${from}&end_date=${to}&start=${start}&order_by=date&order_dir=asc&date_format=MM/DD/YYYY&order_field=date&order_desc=false&since=${from}&until=${to}&page=${paging}&user_agent=Toggl%20New%205.10.10&bars_count=31&subgrouping_ids=true&bookmark_token=`;
-    var response = await fetch(url, { method: "GET", headers: { Authorization: authHeader } });
-    var data: TogglResponse = await response.json();
-    records = records.concat(data.data);
 
-    totalCount = data.total_count;
-    loadedData += data.data.length;
-
-    paging += 1;
-    start += 1;
-  } while (totalCount > loadedData);
-
-  return records;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: { Authorization: authHeader },
+  });
+  return (await response.json()) as Promise<TimeEntry[]>;
 }
 
 function dateFormat(date: Date) {
@@ -332,7 +312,7 @@ function getDateRange(mode: "custom" | "thisMonth" | "prevMonth"): [string, stri
 
 function getWorkspaceId(): string {
   const url = window.location.pathname;
-  var rest = url.replace("https://", "");
+  let rest = url.replace("https://", "");
 
   rest = rest.substring(rest.indexOf("/") + 1); //odstranění stránky
   rest = rest.substring(rest.indexOf("/") + 1); //odstranění reports
