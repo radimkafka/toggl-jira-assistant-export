@@ -1,23 +1,9 @@
 import { createReport } from "./script.js";
-import { DateMode } from "./types.js";
-
-const dateRange = {
-  this_month: "thisMonth",
-  prev_month: "prevMonth",
-  custom: "custom",
-} as const;
 
 async function onClick(info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) {
   if (!tab) return;
   const config = await GetConfig();
-  await createReport(tab, config, getDateMode(info.menuItemId));
-}
-
-function getDateMode(tabId: string | number): DateMode {
-  const tabIdString = tabId.toString();
-  for (const key in dateRange) if (tabIdString.includes(key)) return (dateRange as any)[key];
-
-  return dateRange.prev_month;
+  await createReport(tab, config);
 }
 
 async function GetConfig() {

@@ -1,4 +1,5 @@
-import { getDateRange } from "./dateRanges";
+import { getDateRange } from "./dateRanges.js";
+import { fetchInTargetTab, logInTargetTab, setCurrentTabId } from "./targetWindowUtils.js";
 import type {
   Config,
   CommentItem,
@@ -232,32 +233,17 @@ function stringifyWorklog({ project, comment, duration, date }: ReportData, incl
   return `${project};${date};${timeFormat(duration, includeSeconds)};${comment}`;
 }
 
-async function tabFetch<T>(tabId: number, url: string, authHeader: string) {
-  const response = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: async (...args: string[]) => {
-      const response = await fetch(args[0], {
-        method: "GET",
-        headers: { Authorization: args[1] },
-      });
-      return (await response.json()) as T;
-    },
-    args: [url, authHeader],
-  });
-  return response[0].result;
-}
-
-async function getDataAsync(tabId: number, dateFrom: string, dateTo: string, authHeader: string): Promise<TimeEntry[]> {
+async function getDataAsync(dateFrom: string, dateTo: string, authHeader: string): Promise<TimeEntry[]> {
   const dateTimeFrom = `${dateFrom}T00:00:00.000Z`;
   const dateTimeTo = `${dateTo}T23:59:59.999Z`;
   const url = `https://track.toggl.com/api/v9/me/time_entries?start_date=${dateTimeFrom}&end_date=${dateTimeTo}`;
-  const response = await tabFetch<TimeEntry[]>(tabId, url, authHeader);
+  const response = await fetchInTargetTab<TimeEntry[]>(url, authHeader);
   return response ?? [];
 }
 
-async function getProjectsAsync(tabId: number, workspaceId: string, authHeader: string): Promise<Project[]> {
+async function getProjectsAsync(workspaceId: string, authHeader: string): Promise<Project[]> {
   const url = `https://track.toggl.com/api/v9/workspaces/${workspaceId}/projects`;
-  const response = await tabFetch<Project[]>(tabId, url, authHeader);
+  const response = await fetchInTargetTab<Project[]>(url, authHeader);
   return response ?? [];
 }
 
@@ -308,55 +294,42 @@ function getWorkspaceId(tabUrl: URL): string {
   return id;
 }
 
-async function getApiToken(tabId: number, location?: ConfigApiKeyLocation) {
-  const locationKey = location?.key ?? "/api/v9/me";
-  const locationStorage = location?.storage ?? "session";
-  const locationPropertyName = location?.propertyName ?? "api_token";
-  const response = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: (...args: string[]) => {
-      const storage = args[1] === "session" ? sessionStorage : localStorage;
-      const me = JSON.parse(storage.getItem(args[0]) ?? "null");
-      return me?.[args[2]];
-    },
-    args: [locationKey, locationStorage, locationPropertyName],
-  });
-  return response[0].result;
-}
-
 export async function createReport(tab: chrome.tabs.Tab, config: Config) {
-  if (!tab.url) {
-    console.warn("Tab url not found!");
-    return;
-  }
   if (!tab.id) {
     console.warn("Tab id not found!");
     return;
   }
 
+  setCurrentTabId(tab.id);
+  if (!tab.url) {
+    console.warn("Tab url not found!");
+    return;
+  }
+
   const url = new URL(tab.url ?? "");
   const [from, to] = getDateRange(url);
+  logInTargetTab(`from, to: ${from}, ${to}`);
 
-  const workspaceId = getWorkspaceId(url);
-  if (!workspaceId) {
-    console.warn("Workspace not found!");
-    return;
-  }
+  // const workspaceId = getWorkspaceId(url);
+  // if (!workspaceId) {
+  //   console.warn("Workspace not found!");
+  //   return;
+  // }
 
-  const apiToken = await getApiToken(tab.id, config.apiKeyLocation);
-  if (!apiToken) {
-    console.warn("Api token not found!");
-    return;
-  }
+  // const apiToken = await getApiToken(tab.id, config.apiKeyLocation);
+  // if (!apiToken) {
+  //   console.warn("Api token not found!");
+  //   return;
+  // }
 
-  const authHeader = `Basic ${btoa(`${apiToken}:api_token`)}`;
+  // const authHeader = `Basic ${btoa(`${apiToken}:api_token`)}`;
 
-  const projects = await getProjectsAsync(tab.id, workspaceId, authHeader);
-  const data = await getDataAsync(tab.id, from, to, authHeader);
+  // const projects = await getProjectsAsync(tab.id, workspaceId, authHeader);
+  // const data = await getDataAsync(tab.id, from, to, authHeader);
 
-  const processedData = processData(data, projects);
+  // const processedData = processData(data, projects);
 
-  const groupedData = groupData(processedData);
-  const filteredData = filterData(groupedData, config);
-  createReports(filteredData, config);
+  // const groupedData = groupData(processedData);
+  // const filteredData = filterData(groupedData, config);
+  // createReports(filteredData, config);
 }
