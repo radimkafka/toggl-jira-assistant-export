@@ -295,13 +295,15 @@ export type Project = {
 };
 
 export type DateRangeType =
-  | ""
   | "today"
   | "yesterday"
-  | "last7"
   | "thisWeek"
-  | "lastWeek"
+  | "prevWeek"
   | "thisMonth"
-  | "lastMonth"
+  | "prevMonth"
+  | "last30Days"
+  | "last90Days"
+  | "last12Months"
   | "thisYear"
-  | "lastYear";
+  | "prevYear"
+  | "custom";
