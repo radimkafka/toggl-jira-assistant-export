@@ -293,3 +293,15 @@ export type Project = {
   /** Workspace ID */
   workspace_id: number;
 };
+
+export type DateRangeType =
+  | ""
+  | "today"
+  | "yesterday"
+  | "last7"
+  | "thisWeek"
+  | "lastWeek"
+  | "thisMonth"
+  | "lastMonth"
+  | "thisYear"
+  | "lastYear";

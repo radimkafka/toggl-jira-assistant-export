@@ -102,6 +102,66 @@ function dateTest() {
   //   console.log(a, from, to);
   // });
   [
+    new Date("2024-02-01"),
+    new Date("2024-02-02"),
+    new Date("2024-02-03"),
+    new Date("2024-02-04"),
+    new Date("2024-02-05"),
+    new Date("2024-02-06"),
+    new Date("2024-02-07"),
+    new Date("2024-02-08"),
+    new Date("2024-02-09"),
+    new Date("2024-02-10"),
+    new Date("2024-02-11"),
+    new Date("2024-02-12"),
+    new Date("2024-02-13"),
+    new Date("2024-02-14"),
+    new Date("2024-02-15"),
+    new Date("2024-02-16"),
+    new Date("2024-02-17"),
+    new Date("2024-02-18"),
+    new Date("2024-02-19"),
+    new Date("2024-02-20"),
+    new Date("2024-02-21"),
+    new Date("2024-02-22"),
+    new Date("2024-02-23"),
+    new Date("2024-02-24"),
+    new Date("2024-02-25"),
+    new Date("2024-02-26"),
+    new Date("2024-02-27"),
+    new Date("2024-02-28"),
+    new Date("2024-02-29"),
+    new Date("2024-03-01"),
+    new Date("2024-03-02"),
+    new Date("2024-03-03"),
+    new Date("2024-03-04"),
+    new Date("2024-03-05"),
+    new Date("2024-03-06"),
+    new Date("2024-03-07"),
+    new Date("2024-03-08"),
+    new Date("2024-03-09"),
+    new Date("2024-03-10"),
+    new Date("2024-03-11"),
+    new Date("2024-03-12"),
+    new Date("2024-03-13"),
+    new Date("2024-03-14"),
+    new Date("2024-03-15"),
+    new Date("2024-03-16"),
+    new Date("2024-03-17"),
+    new Date("2024-03-18"),
+    new Date("2024-03-19"),
+    new Date("2024-03-20"),
+    new Date("2024-03-21"),
+    new Date("2024-03-22"),
+    new Date("2024-03-23"),
+    new Date("2024-03-24"),
+    new Date("2024-03-25"),
+    new Date("2024-03-26"),
+    new Date("2024-03-27"),
+    new Date("2024-03-28"),
+    new Date("2024-03-29"),
+    new Date("2024-03-30"),
+    new Date("2024-03-31"),
     new Date("2024-04-01"),
     new Date("2024-04-02"),
     new Date("2024-04-03"),
@@ -132,10 +192,10 @@ function dateTest() {
     new Date("2024-04-28"),
     new Date("2024-04-29"),
     new Date("2024-04-30"),
-    // new Date("2024-04-31"),
   ].forEach(a => {
-    const [from, to] = getDateRangeFromUrl("/period/thisWeek", a);
-    console.log(from, to);
+    const [from, to] = getDateRangeFromUrl("/period/last30Days", a);
+    // console.log(from, to);
+    console.log(`${formatDate(a)}: `, from, to);
   });
 }
 
@@ -152,26 +212,13 @@ function getDateRangeFromUrl(type, initDate = new Date()) {
     const yesterdayFormated = formatDate(yesterday);
     return [yesterdayFormated, yesterdayFormated];
   } else if (type.endsWith("/period/thisWeek")) {
-    const firstDayOfWeek = new Date(initDate);
-    const isSunday = firstDayOfWeek.getDay() === 0;
+    var [startOfWeek, endOfWeek] = getStartAndEndOfWeek(new Date(initDate));
 
-    if (firstDayOfWeek.getDate() == firstDayOfWeek.getDay()) {
-    } else if (firstDayOfWeek.getDate() == 1) {
-      firstDayOfWeek.setDate(firstDayOfWeek.getDate() - (isSunday ? 7 : firstDayOfWeek.getDay() + 1));
-    }
-
-    const lastDayOfWeek = new Date(firstDayOfWeek);
-    lastDayOfWeek.setDate(lastDayOfWeek.getDate() + 7);
-
-    return [formatDate(firstDayOfWeek), formatDate(lastDayOfWeek)];
+    return [formatDate(startOfWeek), formatDate(endOfWeek)];
   } else if (type.endsWith("/period/prevWeek")) {
-    const firstDayOfWeek = new Date(initDate);
-    firstDayOfWeek.setDate(firstDayOfWeek.getDate() - firstDayOfWeek.getDay() + 1 - 7);
+    var [startOfWeek, endOfWeek] = getStartAndEndOfWeek(subtractDays(initDate, 7));
 
-    const lastDayOfWeek = new Date(initDate);
-    lastDayOfWeek.setDate(lastDayOfWeek.getDate() + 7 - lastDayOfWeek.getDay() - 7);
-
-    return [formatDate(firstDayOfWeek), formatDate(lastDayOfWeek)];
+    return [formatDate(startOfWeek), formatDate(endOfWeek)];
   } else if (type.endsWith("/period/thisMonth")) {
     const firstDayOfMonth = new Date(initDate);
     firstDayOfMonth.setDate(1);
@@ -218,6 +265,22 @@ function getDateRangeFromUrl(type, initDate = new Date()) {
     const lastDayOfYear = new Date(today.getFullYear() - 1, 11, 31);
     return [formatDate(firstDayOfYear), formatDate(lastDayOfYear)];
   }
+}
+
+function getStartAndEndOfWeek(date) {
+  var startOfWeek = new Date(date);
+  startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
+
+  var endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(endOfWeek.getDate() + 6);
+
+  return [startOfWeek, endOfWeek];
+}
+
+function subtractDays(date, days) {
+  var result = new Date(date);
+  result.setDate(result.getDate() - days);
+  return result;
 }
 
 function formatDate(date) {

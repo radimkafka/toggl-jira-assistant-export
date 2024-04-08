@@ -10,6 +10,7 @@ import type {
   TimeEntry,
   Project,
   DateMode,
+  DateRangeType,
 } from "./types";
 
 function download(filename: string, text: string) {
@@ -308,21 +309,92 @@ function getDateRangeFromUrl(tabUrl: URL): [string, string] {
   return [matched.groups["from"], matched?.groups["to"]];
 }
 
-function formatDate(date: Date) {
-  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+function getDateRangeFromUrl2(type: DateRangeType, initDate = new Date()) {
+  const matched = type.match("from/(?<from>....-..-..)/to/(?<to>(....-..-..))");
+  if (matched?.groups?.["from"] && matched?.groups?.["to"]) {
+    return [matched.groups["from"], matched?.groups["to"]];
+  } else if (type.endsWith("/period/today")) {
+    const today = formatDate(new Date(initDate));
+    return [today, today];
+  } else if (type.endsWith("/period/yesterday")) {
+    const yesterday = new Date(initDate);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayFormated = formatDate(yesterday);
+    return [yesterdayFormated, yesterdayFormated];
+  } else if (type.endsWith("/period/thisWeek")) {
+    var [startOfWeek, endOfWeek] = getStartAndEndOfWeek(new Date(initDate));
+
+    return [formatDate(startOfWeek), formatDate(endOfWeek)];
+  } else if (type.endsWith("/period/prevWeek")) {
+    var [startOfWeek, endOfWeek] = getStartAndEndOfWeek(subtractDays(initDate, 7));
+
+    return [formatDate(startOfWeek), formatDate(endOfWeek)];
+  } else if (type.endsWith("/period/thisMonth")) {
+    const firstDayOfMonth = new Date(initDate);
+    firstDayOfMonth.setDate(1);
+
+    const lastDayOfMonth = new Date(firstDayOfMonth);
+    lastDayOfMonth.setMonth(lastDayOfMonth.getMonth() + 1);
+    lastDayOfMonth.setDate(0);
+
+    return [formatDate(firstDayOfMonth), formatDate(lastDayOfMonth)];
+  } else if (type.endsWith("/period/prevMonth")) {
+    const firstDayOfMonth = new Date(initDate);
+    firstDayOfMonth.setDate(-1);
+    firstDayOfMonth.setDate(1);
+
+    const lastDayOfMonth = new Date(initDate);
+    lastDayOfMonth.setDate(0);
+
+    return [formatDate(firstDayOfMonth), formatDate(lastDayOfMonth)];
+  } else if (type.endsWith("/period/last30Days")) {
+    const date = new Date(initDate);
+    date.setDate(date.getDate() - 30);
+
+    return [formatDate(date), formatDate(new Date(initDate))];
+  } else if (type.endsWith("/period/last90Days")) {
+    const date = new Date(initDate);
+    date.setDate(date.getDate() - 90);
+
+    return [formatDate(date), formatDate(new Date(initDate))];
+  } else if (type.endsWith("/period/last12Months")) {
+    const date = new Date(initDate);
+    date.setFullYear(date.getFullYear() - 1);
+
+    return [formatDate(date), formatDate(new Date(initDate))];
+  } else if (type.endsWith("/period/thisYear")) {
+    const today = new Date(initDate);
+    const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+
+    const lastDayOfYear = new Date(today.getFullYear(), 11, 31);
+    return [formatDate(firstDayOfYear), formatDate(lastDayOfYear)];
+  } else if (type.endsWith("/period/prevYear")) {
+    const today = new Date(initDate);
+    const firstDayOfYear = new Date(today.getFullYear() - 1, 0, 1);
+
+    const lastDayOfYear = new Date(today.getFullYear() - 1, 11, 31);
+    return [formatDate(firstDayOfYear), formatDate(lastDayOfYear)];
+  }
 }
 
-function getDateRange(mode: DateMode, tabUrl: URL): [string, string] {
-  switch (mode) {
-    case "custom":
-      return getDateRangeFromUrl(tabUrl);
-    case "thisMonth":
-      return getDateRageThisMonth();
-    case "prevMonth":
-      return getDateRagePreviousMonth();
-    default:
-      return getDateRagePreviousMonth();
-  }
+function getStartAndEndOfWeek(date: Date) {
+  var startOfWeek = new Date(date);
+  startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
+
+  var endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(endOfWeek.getDate() + 6);
+
+  return [startOfWeek, endOfWeek];
+}
+
+function subtractDays(date: Date, days: number) {
+  var result = new Date(date);
+  result.setDate(result.getDate() - days);
+  return result;
+}
+
+function formatDate(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 }
 
 function getWorkspaceId(tabUrl: URL): string {
@@ -362,7 +434,7 @@ async function getApiToken(tabId: number, location?: ConfigApiKeyLocation) {
   return response[0].result;
 }
 
-export async function createReport(tab: chrome.tabs.Tab, config: Config, dateMode: DateMode) {
+export async function createReport(tab: chrome.tabs.Tab, config: Config) {
   if (!tab.url) {
     console.warn("Tab url not found!");
     return;
@@ -373,7 +445,7 @@ export async function createReport(tab: chrome.tabs.Tab, config: Config, dateMod
   }
 
   const url = new URL(tab.url ?? "");
-  const [from, to] = getDateRange(dateMode, url);
+  const [from, to] = getDateRangeFromUrl(url);
 
   const workspaceId = getWorkspaceId(url);
   if (!workspaceId) {
