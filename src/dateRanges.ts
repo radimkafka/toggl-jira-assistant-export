@@ -5,95 +5,31 @@ const customRangeRegex = /from\/(?<from>....-..-..)\/to\/(?<to>....-..-..)/;
 export function getDateRange(url: URL, initDate = new Date()): [string, string] {
   const rangeType = getDateRangeType(url.pathname);
 
-  if (rangeType === "custom") {
-    const matched = url.pathname.match(customRangeRegex);
-    if (matched?.groups?.["from"] && matched?.groups?.["to"]) {
-      return [matched.groups["from"], matched?.groups["to"]];
-    }
-    console.error("Invalid custom date range URL");
-  }
-
-  if (rangeType === "today") {
-    const today = formatDate(new Date(initDate));
-    return [today, today];
-  }
-
-  if (rangeType === "yesterday") {
-    const yesterday = new Date(initDate);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayFormated = formatDate(yesterday);
-    return [yesterdayFormated, yesterdayFormated];
-  }
-
-  if (rangeType === "thisWeek") {
-    var [startOfWeek, endOfWeek] = getStartAndEndOfWeek(new Date(initDate));
-
-    return [formatDate(startOfWeek), formatDate(endOfWeek)];
-  }
-
-  if (rangeType === "prevWeek") {
-    var [startOfWeek, endOfWeek] = getStartAndEndOfWeek(subtractDays(initDate, 7));
-
-    return [formatDate(startOfWeek), formatDate(endOfWeek)];
-  }
-
-  if (rangeType === "thisMonth") {
-    const firstDayOfMonth = new Date(initDate);
-    firstDayOfMonth.setDate(1);
-
-    const lastDayOfMonth = new Date(firstDayOfMonth);
-    lastDayOfMonth.setMonth(lastDayOfMonth.getMonth() + 1);
-    lastDayOfMonth.setDate(0);
-
-    return [formatDate(firstDayOfMonth), formatDate(lastDayOfMonth)];
-  }
-
-  if (rangeType === "prevMonth") {
-    const firstDayOfMonth = new Date(initDate);
-    firstDayOfMonth.setDate(-1);
-    firstDayOfMonth.setDate(1);
-
-    const lastDayOfMonth = new Date(initDate);
-    lastDayOfMonth.setDate(0);
-
-    return [formatDate(firstDayOfMonth), formatDate(lastDayOfMonth)];
-  }
-
-  if (rangeType === "last30Days") {
-    const date = new Date(initDate);
-    date.setDate(date.getDate() - 30);
-
-    return [formatDate(date), formatDate(new Date(initDate))];
-  }
-
-  if (rangeType === "last90Days") {
-    const date = new Date(initDate);
-    date.setDate(date.getDate() - 90);
-
-    return [formatDate(date), formatDate(new Date(initDate))];
-  }
-
-  if (rangeType === "last12Months") {
-    const date = new Date(initDate);
-    date.setFullYear(date.getFullYear() - 1);
-
-    return [formatDate(date), formatDate(new Date(initDate))];
-  }
-
-  if (rangeType === "thisYear") {
-    const today = new Date(initDate);
-    const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
-
-    const lastDayOfYear = new Date(today.getFullYear(), 11, 31);
-    return [formatDate(firstDayOfYear), formatDate(lastDayOfYear)];
-  }
-
-  if (rangeType === "prevYear") {
-    const today = new Date(initDate);
-    const firstDayOfYear = new Date(today.getFullYear() - 1, 0, 1);
-
-    const lastDayOfYear = new Date(today.getFullYear() - 1, 11, 31);
-    return [formatDate(firstDayOfYear), formatDate(lastDayOfYear)];
+  switch (rangeType) {
+    case "custom":
+      return getCustomRange(url);
+    case "today":
+      return getTodayRange(initDate);
+    case "yesterday":
+      return getYesterdayRange(initDate);
+    case "thisWeek":
+      return getThisWeekRange(initDate);
+    case "prevWeek":
+      return getPrevWeekRange(initDate);
+    case "thisMonth":
+      return getThisMonthRange(initDate);
+    case "prevMonth":
+      return getPrevMonthRange(initDate);
+    case "last30Days":
+      return getLast30DaysRange(initDate);
+    case "last90Days":
+      return getLast90DaysRange(initDate);
+    case "last12Months":
+      return getLast12MonthsRange(initDate);
+    case "thisYear":
+      return getThisYearRange(initDate);
+    case "prevYear":
+      return getPrevYearRange(initDate);
   }
 
   throw new Error("Invalid date range type");
@@ -142,6 +78,94 @@ export function getDateRangeType(url: string): DateRangeType {
   return "prevMonth";
 }
 
+function getCustomRange(url: URL): [string, string] {
+  const matched = url.pathname.match(customRangeRegex);
+  if (matched?.groups?.["from"] && matched?.groups?.["to"]) {
+    return [matched.groups["from"], matched?.groups["to"]];
+  }
+
+  throw new Error("Invalid custom date range URL");
+}
+
+function getTodayRange(initDate: Date): [string, string] {
+  const today = formatDate(new Date(initDate));
+  return [today, today];
+}
+
+function getYesterdayRange(initDate: Date): [string, string] {
+  const yesterdayFormated = formatDate(subtractDays(new Date(initDate), 1));
+  return [yesterdayFormated, yesterdayFormated];
+}
+
+function getThisWeekRange(initDate: Date): [string, string] {
+  var [startOfWeek, endOfWeek] = getStartAndEndOfWeek(new Date(initDate));
+
+  return [formatDate(startOfWeek), formatDate(endOfWeek)];
+}
+
+function getPrevWeekRange(initDate: Date): [string, string] {
+  var [startOfWeek, endOfWeek] = getStartAndEndOfWeek(subtractDays(initDate, 7));
+
+  return [formatDate(startOfWeek), formatDate(endOfWeek)];
+}
+
+function getThisMonthRange(initDate: Date): [string, string] {
+  const firstDayOfMonth = new Date(initDate);
+  firstDayOfMonth.setDate(1);
+
+  const lastDayOfMonth = new Date(firstDayOfMonth);
+  lastDayOfMonth.setMonth(lastDayOfMonth.getMonth() + 1);
+  lastDayOfMonth.setDate(0);
+
+  return [formatDate(firstDayOfMonth), formatDate(lastDayOfMonth)];
+}
+
+function getPrevMonthRange(initDate: Date): [string, string] {
+  const firstDayOfMonth = new Date(initDate);
+  firstDayOfMonth.setDate(-1);
+  firstDayOfMonth.setDate(1);
+
+  const lastDayOfMonth = new Date(initDate);
+  lastDayOfMonth.setDate(0);
+
+  return [formatDate(firstDayOfMonth), formatDate(lastDayOfMonth)];
+}
+
+function getLast30DaysRange(initDate: Date): [string, string] {
+  const date = subtractDays(new Date(initDate), 30);
+
+  return [formatDate(date), formatDate(new Date(initDate))];
+}
+
+function getLast90DaysRange(initDate: Date): [string, string] {
+  const date = subtractDays(new Date(initDate), 90);
+
+  return [formatDate(date), formatDate(new Date(initDate))];
+}
+
+function getLast12MonthsRange(initDate: Date): [string, string] {
+  const date = new Date(initDate);
+  date.setFullYear(date.getFullYear() - 1);
+
+  return [formatDate(date), formatDate(new Date(initDate))];
+}
+
+function getThisYearRange(initDate: Date): [string, string] {
+  const today = new Date(initDate);
+  const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+
+  const lastDayOfYear = new Date(today.getFullYear(), 11, 31);
+  return [formatDate(firstDayOfYear), formatDate(lastDayOfYear)];
+}
+
+function getPrevYearRange(initDate: Date): [string, string] {
+  const today = new Date(initDate);
+  const firstDayOfYear = new Date(today.getFullYear() - 1, 0, 1);
+
+  const lastDayOfYear = new Date(today.getFullYear() - 1, 11, 31);
+  return [formatDate(firstDayOfYear), formatDate(lastDayOfYear)];
+}
+
 function getStartAndEndOfWeek(date: Date) {
   var startOfWeek = new Date(date);
   startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
@@ -157,6 +181,7 @@ function subtractDays(date: Date, days: number) {
   result.setDate(result.getDate() - days);
   return result;
 }
+
 function formatDate(date: Date) {
   return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
 }
