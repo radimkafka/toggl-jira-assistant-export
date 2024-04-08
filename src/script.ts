@@ -13,6 +13,7 @@ import type {
 } from "./types";
 
 function download(filename: string, text: string) {
+  // todo vyzkoušet
   var hiddenElement = document.createElement("a");
   hiddenElement.href = "data:attachment/text," + encodeURI(text);
   hiddenElement.target = "_blank";
