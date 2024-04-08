@@ -35,37 +35,5 @@ const contextItemMain: chrome.contextMenus.CreateProperties = {
   targetUrlPatterns: ["https://track.toggl.com/reports/*"],
 };
 
-const contextItemThisMonth: chrome.contextMenus.CreateProperties = {
-  contexts: ["page"],
-  parentId: "toggle_jira_report",
-  id: "toggle_jira_report_this_month",
-  title: "This month",
-  type: "normal",
-  visible: true,
-  targetUrlPatterns: ["https://track.toggl.com/reports/*"],
-};
-
-const contextItemPrevMonth: chrome.contextMenus.CreateProperties = {
-  contexts: ["page"],
-  parentId: "toggle_jira_report",
-  id: "toggle_jira_report_prev_month",
-  title: "Previous month",
-  type: "normal",
-  visible: true,
-  targetUrlPatterns: ["https://track.toggl.com/reports/*"],
-};
-const contextItemCustom: chrome.contextMenus.CreateProperties = {
-  contexts: ["page"],
-  parentId: "toggle_jira_report",
-  id: "toggle_jira_report_custom",
-  title: "From url",
-  type: "normal",
-  visible: true,
-  targetUrlPatterns: ["https://track.toggl.com/reports/*"],
-};
-
 chrome.contextMenus.create(contextItemMain);
-chrome.contextMenus.create(contextItemThisMonth);
-chrome.contextMenus.create(contextItemPrevMonth);
-chrome.contextMenus.create(contextItemCustom);
 chrome.contextMenus.onClicked.addListener(onClick);
