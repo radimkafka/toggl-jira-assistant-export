@@ -14,7 +14,6 @@ export function logInTargetTab(text: string, type: "info" | "warn" | "error" = "
   chrome.scripting.executeScript({
     target: { tabId: currentTabId },
     func: async (...args: string[]) => {
-      console.log("args: ", args);
       console[args[0] as "info" | "warn" | "error"](args[1]);
     },
     args: [type, text],

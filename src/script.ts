@@ -1,5 +1,5 @@
 import { getDateRange } from "./dateRanges.js";
-import { fetchInTargetTab, logInTargetTab, setCurrentTabId } from "./targetWindowUtils.js";
+import { fetchInTargetTab, getApiToken, logInTargetTab, setCurrentTabId } from "./targetWindowUtils.js";
 import type {
   Config,
   CommentItem,
@@ -302,34 +302,32 @@ export async function createReport(tab: chrome.tabs.Tab, config: Config) {
 
   setCurrentTabId(tab.id);
   if (!tab.url) {
-    console.warn("Tab url not found!");
+    logInTargetTab("Tab url not found!", "warn");
     return;
   }
 
   const url = new URL(tab.url ?? "");
   const [from, to] = getDateRange(url);
-  logInTargetTab(`from, to: ${from}, ${to}`);
 
-  // const workspaceId = getWorkspaceId(url);
-  // if (!workspaceId) {
-  //   console.warn("Workspace not found!");
-  //   return;
-  // }
+  const workspaceId = getWorkspaceId(url);
+  if (!workspaceId) {
+    logInTargetTab("Workspace not found!", "warn");
+    return;
+  }
 
-  // const apiToken = await getApiToken(tab.id, config.apiKeyLocation);
-  // if (!apiToken) {
-  //   console.warn("Api token not found!");
-  //   return;
-  // }
+  const apiToken = await getApiToken(config.apiKeyLocation);
+  if (!apiToken) {
+    logInTargetTab("Api token not found!", "warn");
+    return;
+  }
 
-  // const authHeader = `Basic ${btoa(`${apiToken}:api_token`)}`;
+  const authHeader = `Basic ${btoa(`${apiToken}:api_token`)}`;
+  const projects = await getProjectsAsync(workspaceId, authHeader);
+  const data = await getDataAsync(from, to, authHeader);
 
-  // const projects = await getProjectsAsync(tab.id, workspaceId, authHeader);
-  // const data = await getDataAsync(tab.id, from, to, authHeader);
+  const processedData = processData(data, projects);
 
-  // const processedData = processData(data, projects);
-
-  // const groupedData = groupData(processedData);
-  // const filteredData = filterData(groupedData, config);
-  // createReports(filteredData, config);
+  const groupedData = groupData(processedData);
+  const filteredData = filterData(groupedData, config);
+  createReports(filteredData, config);
 }
