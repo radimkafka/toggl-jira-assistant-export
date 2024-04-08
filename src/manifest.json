@@ -11,7 +11,9 @@
     "scripting",
     "storage"
   ],
+  "minimum_chrome_version": "93",
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   }
 }
