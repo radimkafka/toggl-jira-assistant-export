@@ -58,3 +58,21 @@ export async function getApiToken(location?: ConfigApiKeyLocation) {
   });
   return response[0].result;
 }
+
+export async function download(filename: string, text: string) {
+  if (!currentTabId) {
+    throw new Error("currentTabId is not set");
+  }
+
+  await chrome.scripting.executeScript({
+    target: { tabId: currentTabId },
+    func: (...args: string[]) => {
+      var hiddenElement = document.createElement("a");
+      hiddenElement.href = "data:attachment/text," + encodeURI(args[0]);
+      hiddenElement.target = "_blank";
+      hiddenElement.download = args[1];
+      hiddenElement.click();
+    },
+    args: [text, filename],
+  });
+}

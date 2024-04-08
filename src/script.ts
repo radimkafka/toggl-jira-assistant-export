@@ -1,5 +1,5 @@
 import { getDateRange } from "./dateRanges.js";
-import { fetchInTargetTab, getApiToken, logInTargetTab, setCurrentTabId } from "./targetWindowUtils.js";
+import { download, fetchInTargetTab, getApiToken, logInTargetTab, setCurrentTabId } from "./targetWindowUtils.js";
 import type {
   Config,
   CommentItem,
@@ -14,15 +14,6 @@ import type {
   DateMode,
   DateRangeType,
 } from "./types";
-
-function download(filename: string, text: string) {
-  // todo vyzkoušet
-  var hiddenElement = document.createElement("a");
-  hiddenElement.href = "data:attachment/text," + encodeURI(text);
-  hiddenElement.target = "_blank";
-  hiddenElement.download = filename;
-  hiddenElement.click();
-}
 
 function processData(data: TimeEntry[], projects: Project[]): ReportItem[] {
   return data.map(a => createReportItem(a, projects));
@@ -71,10 +62,10 @@ function groupData(data: ReportItem[]): GroupedReportItem[] {
   return records;
 }
 
-function createReports(data: { name: string; items: ReportData[] }[], config: Config) {
-  data.forEach(a => {
-    download(`${a.name}.csv`, getReportContent(a.items, config));
-  });
+async function createReports(data: { name: string; items: ReportData[] }[], config: Config) {
+  for (const a of data) {
+    await download(`${a.name}.csv`, getReportContent(a.items, config));
+  }
 }
 
 function filterData(data: GroupedReportItem[], config: Config): { name: string; items: ReportData[] }[] {
