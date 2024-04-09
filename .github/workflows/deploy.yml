@@ -35,7 +35,10 @@ jobs:
 
       - name: Zip dist
         if: steps.check.outputs.changed == 'true'
-        run: zip -r toggl-jira-assistant-export.zip dist/
+        run: |
+          cd dist
+          zip -r toggl-jira-assistant-export.zip .
+          cd ..
 
       - name: Create release
         if: steps.check.outputs.changed == 'true'
@@ -45,4 +48,4 @@ jobs:
           automatic_release_tag: "${{ steps.check.outputs.version}}"
           prerelease: false
           title: "v${{ steps.check.outputs.version }}"
-          files: toggl-jira-assistant-export.zip
+          files: dist/toggl-jira-assistant-export.zip
