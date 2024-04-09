@@ -1,6 +1,6 @@
 {
   "name": "toggl-jira-assistant-export",
-  "version": "2.0.1",
+  "version": "2.0.0",
   "description": "",
   "main": "dist/background.js",
   "directories": {
@@ -8,8 +8,7 @@
   },
   "scripts": {
     "dev": "tsc && npm run copy-files && npm run copy-config",
-    "build": "npm run delete-dist && tsc && npm run copy-files",
-    "delete-dist": "if exist dist rmdir /S /Q dist",
+    "build": "tsc && npm run copy-files",
     "copy-files": "xcopy /E /I /D public dist",
     "copy-config": "xcopy /I /D test\\config.json dist"
   },
