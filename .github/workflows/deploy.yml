@@ -4,12 +4,6 @@ on:
   push:
     branches: ["feature/v2-preview"]
 
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  id-token: write
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -43,7 +37,6 @@ jobs:
         if: steps.check.outputs.changed == 'true'
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "${{ steps.check.outputs.version}}"
           prerelease: false
           title: "Development Build"
