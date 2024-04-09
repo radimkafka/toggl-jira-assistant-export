@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version-changed: ${{ steps.check.outputs.changed }}
+      version: ${{ steps.check.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -27,7 +28,7 @@ jobs:
   create-release:
     name: Create release
     needs: [version-check]
-    if: needs.test-version.outputs.version-changed == 'true'
+    if: needs.version-check.outputs.version-changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
@@ -49,7 +50,7 @@ jobs:
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ steps.check.outputs.version}}"
+          automatic_release_tag: "${{ needs.test-version.outputs.version-changed }}"
           prerelease: false
-          title: "v${{ steps.check.outputs.version }}"
+          title: "v${{ needs.test-version.outputs.version-changed }}"
           files: dist/toggl-jira-assistant-export.zip
