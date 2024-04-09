@@ -1,6 +1,6 @@
 {
   "name": "toggl-jira-assistant-export",
-  "version": "2.0.0-preview.9",
+  "version": "2.0.0-preview.10",
   "description": "",
   "main": "dist/background.js",
   "directories": {
