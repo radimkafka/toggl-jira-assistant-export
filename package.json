@@ -7,9 +7,11 @@
     "test": "test"
   },
   "scripts": {
-    "build": "tsc",
-    "setup": "",
-    "release": "npm run build && zip -r toggl-jira-assistant-export.zip dist"
+    "dev": "tsc && npm run copy-files && npm run copy-config",
+    "build": "npm run delete-dist && tsc && npm run copy-files",
+    "delete-dist": "rmdir /S /Q dist",
+    "copy-files": "xcopy /E /I /D public dist",
+    "copy-config": "xcopy /I /D test\\config.json dist"
   },
   "repository": {
     "type": "git",
