@@ -53,7 +53,7 @@ jobs:
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ needs.test-version.outputs.version-changed }}"
+          automatic_release_tag: "${{ needs.test-version.outputs.version }}"
           prerelease: false
-          title: "v${{ needs.test-version.outputs.version-changed }}"
+          title: "v${{ needs.test-version.outputs.version }}"
           files: dist/toggl-jira-assistant-export.zip
