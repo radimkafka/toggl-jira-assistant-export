@@ -16,22 +16,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Set up Node
         uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: "npm"
-      - name: Install dependencies
-        run: npm install
-      - name: Build
-        run: npm run build
+      
       - name: Check if version has been updated
         id: check
         uses: EndBug/version-check@v2
-      - name: Log when changed
+      
+      - name: Install dependencies
+       if: steps.check.outputs.changed == 'true'
+        run: npm ci
+      
+      - name: Build 
         if: steps.check.outputs.changed == 'true'
-        run: 'echo "Version change found in commit ${{ steps.check.outputs.commit }}! New version: ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})"'
+        run: npm run build      
+      
+      - name: Copy public
+        if: steps.check.outputs.changed == 'true'
+        run: cp -r public/* dist/
 
-      - name: Log when unchanged
-        if: steps.check.outputs.changed == 'false'
-        run: 'echo "No version change :/"'
+      - name: Create release
+        if: steps.check.outputs.changed == 'true'
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "{{steps.check.outputs.version}}"
+          prerelease: false
+          title: "Development Build"
+          files: Readme.MD
