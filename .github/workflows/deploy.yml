@@ -5,24 +5,7 @@ on:
     branches: ["feature/v2-preview"]
 
 jobs:
-  version-check:
-    name: Version check
-    runs-on: ubuntu-latest
-    outputs:
-      version-changed: ${{ steps.check.outputs.changed }}
-      version: ${{ steps.check.outputs.version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Check if version has been updated
-        id: check
-        uses: EndBug/version-check@v2
-
-  create-release:
-    name: Create release
-    needs: [version-check]
-    if: needs.version-check.outputs.version-changed == 'true'
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,26 +17,35 @@ jobs:
           node-version: 20
           cache: "npm"
 
+      - name: Check if version has been updated
+        id: check
+        uses: EndBug/version-check@v2
+
       - name: Install dependencies
+        if: steps.check.outputs.changed == 'true'
         run: npm ci
 
       - name: Build
+        if: steps.check.outputs.changed == 'true'
         run: npm run build
 
       - name: Copy public
+        if: steps.check.outputs.changed == 'true'
         run: cp -r public/* dist/
 
       - name: Zip dist
+        if: steps.check.outputs.changed == 'true'
         run: |
           cd dist
           zip -r toggl-jira-assistant-export.zip .
           cd ..
 
       - name: Create release
+        if: steps.check.outputs.changed == 'true'
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ needs.version-check.outputs.version }}"
+          automatic_release_tag: "${{ steps.check.outputs.version}}"
           prerelease: false
-          title: "v${{ needs.version-check.outputs.version }}"
+          title: "v${{ steps.check.outputs.version }}"
           files: dist/toggl-jira-assistant-export.zip
