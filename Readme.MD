@@ -1,5 +1,12 @@
 # Change log
 
+### v2.0.0
+
+- Odstranění možností This month, Previous month a From url. Vše se bere z url.
+- Buildí se jako ES module místo CJS
+- Neinjectuje se celý script.js do stránky togglu ale pouze funkce, které je potřeba volat ze stránky (přístup ke storage, volání api, ...)
+- GitHub actions na release
+
 ### v1.4.0
 
 - Použití api/v9 na získání dat
@@ -95,9 +102,3 @@
 ## 1. spuštění
 
 Detail-> Stáhnout Csv -> Stáhnout report // od verze 1.2.0 by nemělo být potřeba
-
-#
-
-## Build
-
-npm run build
