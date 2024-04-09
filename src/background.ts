@@ -9,7 +9,6 @@ async function onClick(info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.
 async function GetConfig() {
   var response = await fetch("./config.json");
   var data = await response.json();
-  dasd;
   return data;
 }
 
