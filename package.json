@@ -9,8 +9,8 @@
   "scripts": {
     "dev": "tsc && npm run copy-files && npm run copy-config",
     "build": "tsc && npm run copy-files",
-    "copy-files": "xcopy /E /I /D public dist",
-    "copy-config": "xcopy /I /D test\\config.json dist"
+    "copy-files": "copyFiles public/* dist",
+    "copy-config": "copyFiles test/config.json dist"
   },
   "repository": {
     "type": "git",
@@ -25,5 +25,8 @@
   "dependencies": {
     "@types/chrome": "0.0.263",
     "typescript": "^5.4.3"
+  },
+  "devDependencies": {
+    "copyfiles": "^2.4.1"
   }
 }
