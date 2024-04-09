@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "tsc && npm run copy-files && npm run copy-config",
     "build": "npm run delete-dist && tsc && npm run copy-files",
-    "delete-dist": "if exist dist rmdir /S /Q dist else exit 0",
+    "delete-dist": "if exist dist rmdir /S /Q dist",
     "copy-files": "xcopy /E /I /D public dist",
     "copy-config": "xcopy /I /D test\\config.json dist"
   },
