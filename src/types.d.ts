@@ -1,4 +1,4 @@
-export interface TogglReportItem {
+export type TogglReportItem = {
   id: number;
   pid: number;
   tid: number | null | undefined;
@@ -21,9 +21,9 @@ export interface TogglReportItem {
   is_billable: boolean;
   cur: string | null | undefined;
   tags: string[];
-}
+};
 
-export interface TogglResponse {
+export type TogglResponse = {
   data: TogglReportItem[];
   activity: any[];
   per_page: number;
@@ -31,9 +31,9 @@ export interface TogglResponse {
   total_count: number;
   total_currencies: { currency: any; amount: any }[];
   total_grand: number;
-}
+};
 
-export interface ReportItem {
+export type ReportItem = {
   project: string;
   projectName: string;
   projectNumber?: string;
@@ -43,25 +43,25 @@ export interface ReportItem {
   duration: number;
   date: string;
   commentItems: CommentItem[];
-}
+};
 
-export interface GroupedReportItem extends ReportItem {
+export type GroupedReportItem = ReportItem & {
   recordCount: number;
-}
+};
 
-export interface ReportData {
+export type ReportData = {
   project: string;
   comment: string;
   duration: number;
   date: string;
-}
+};
 
 export type CommentItemType = "projectNumber" | "Tag" | "Comment" | "unknown";
 
-export interface CommentItem {
+export type CommentItem = {
   type: CommentItemType;
   value: string;
-}
+};
 
 export type ConfigApiKeyLocation = {
   storage: "local" | "session";
@@ -69,26 +69,27 @@ export type ConfigApiKeyLocation = {
   propertyName: string;
 };
 
-export interface Config {
-  dateMode: "custom" | "thisMonth" | "prevMonth";
+export type DateMode = "custom" | "thisMonth" | "prevMonth";
+
+export type Config = {
   roundDuration?: boolean;
   roundToMinutes?: number;
   includeSeconds?: boolean;
   filter: ConfigFilterItem[];
   apiKeyLocation?: ConfigApiKeyLocation;
-}
+};
 
-export interface ConfigFilterItem {
+export type ConfigFilterItem = {
   filename: string;
   restAs: string;
   includedProjects: string[];
   transformations: ConfigTransfromationItem[];
-}
+};
 
-export interface ConfigTransfromationItem {
+export type ConfigTransfromationItem = {
   sourceProjectName: string;
   destinationProject: string;
-}
+};
 
 export type TimeEntry = {
   /** When was last updated */
@@ -292,3 +293,17 @@ export type Project = {
   /** Workspace ID */
   workspace_id: number;
 };
+
+export type DateRangeType =
+  | "today"
+  | "yesterday"
+  | "thisWeek"
+  | "prevWeek"
+  | "thisMonth"
+  | "prevMonth"
+  | "last30Days"
+  | "last90Days"
+  | "last12Months"
+  | "thisYear"
+  | "prevYear"
+  | "custom";

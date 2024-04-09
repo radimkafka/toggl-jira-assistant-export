@@ -1,26 +1,29 @@
 {
-  "name": "jira-toggle-extension",
-  "version": "1.4.0",
+  "name": "toggl-jira-assistant-export",
+  "version": "2.0.0",
   "description": "",
   "main": "dist/background.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsc && npm run copy-files && npm run copy-config",
+    "build": "tsc",
+    "copy-files": "xcopy /E /I /D public dist",
+    "copy-config": "xcopy /I /D test\\config.json dist"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/radimkafka/elx-toggl-jira-report.git"
+    "url": "git+https://github.com/radimkafka/toggl-jira-assistant-export.git"
   },
   "author": "Radim Kafka",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/radimkafka/elx-toggl-jira-report/issues"
+    "url": "https://github.com/radimkafka/toggl-jira-assistant-export/issues"
   },
-  "homepage": "https://github.com/radimkafka/elx-toggl-jira-report#readme",
+  "homepage": "https://github.com/radimkafka/toggl-jira-assistant-export#readme",
   "dependencies": {
-    "@types/chrome": "0.0.143",
-    "typescript": "^4.5.4"
+    "@types/chrome": "0.0.263",
+    "typescript": "^5.4.3"
   }
 }

@@ -1,25 +1,19 @@
-import {
+import { getDateRange } from "./dateRanges.js";
+import { download, fetchInTargetTab, getApiToken, logInTargetTab, setCurrentTabId } from "./targetWindowUtils.js";
+import type {
   Config,
   CommentItem,
   CommentItemType,
   GroupedReportItem,
   ReportData,
   ReportItem,
-  TogglReportItem,
-  TogglResponse,
   ConfigFilterItem,
   ConfigApiKeyLocation,
   TimeEntry,
   Project,
+  DateMode,
+  DateRangeType,
 } from "./types";
-
-function download(filename: string, text: string) {
-  var hiddenElement = document.createElement("a");
-  hiddenElement.href = "data:attachment/text," + encodeURI(text);
-  hiddenElement.target = "_blank";
-  hiddenElement.download = filename;
-  hiddenElement.click();
-}
 
 function processData(data: TimeEntry[], projects: Project[]): ReportItem[] {
   return data.map(a => createReportItem(a, projects));
@@ -68,10 +62,10 @@ function groupData(data: ReportItem[]): GroupedReportItem[] {
   return records;
 }
 
-function createReports(data: { name: string; items: ReportData[] }[], config: Config) {
-  data.forEach(a => {
-    download(`${a.name}.csv`, getReportContent(a.items, config));
-  });
+async function createReports(data: { name: string; items: ReportData[] }[], config: Config) {
+  for (const a of data) {
+    await download(`${a.name}.csv`, getReportContent(a.items, config));
+  }
 }
 
 function filterData(data: GroupedReportItem[], config: Config): { name: string; items: ReportData[] }[] {
@@ -230,32 +224,18 @@ function stringifyWorklog({ project, comment, duration, date }: ReportData, incl
   return `${project};${date};${timeFormat(duration, includeSeconds)};${comment}`;
 }
 
-function getConfigFromStorageAsync(): Promise<Config> {
-  return new Promise(function (resolve, reject) {
-    chrome.storage.local.get("togglJiraConfig", function (items) {
-      resolve(items.togglJiraConfig);
-    });
-  });
-}
-
 async function getDataAsync(dateFrom: string, dateTo: string, authHeader: string): Promise<TimeEntry[]> {
   const dateTimeFrom = `${dateFrom}T00:00:00.000Z`;
   const dateTimeTo = `${dateTo}T23:59:59.999Z`;
   const url = `https://track.toggl.com/api/v9/me/time_entries?start_date=${dateTimeFrom}&end_date=${dateTimeTo}`;
-  const response = await fetch(url, {
-    method: "GET",
-    headers: { Authorization: authHeader },
-  });
-  return (await response.json()) as Promise<TimeEntry[]>;
+  const response = await fetchInTargetTab<TimeEntry[]>(url, authHeader);
+  return response ?? [];
 }
 
 async function getProjectsAsync(workspaceId: string, authHeader: string): Promise<Project[]> {
   const url = `https://track.toggl.com/api/v9/workspaces/${workspaceId}/projects`;
-  const response = await fetch(url, {
-    method: "GET",
-    headers: { Authorization: authHeader },
-  });
-  return (await response.json()) as Promise<Project[]>;
+  const response = await fetchInTargetTab<Project[]>(url, authHeader);
+  return response ?? [];
 }
 
 function dateFormat(date: Date) {
@@ -284,48 +264,8 @@ function roundDuration(worklogItemDuration: number, roundToMinutes: number = 5):
   return rounded;
 }
 
-function getDateRageThisMonth(): [string, string] {
-  const dateNow = new Date(Date.now());
-  const from = new Date(dateNow.getFullYear(), dateNow.getMonth(), 1);
-  const to = new Date(dateNow.getFullYear(), dateNow.getMonth() + 1, 0);
-  return [dateFormat(from), dateFormat(to)];
-}
-
-function getDateRagePreviousMonth(): [string, string] {
-  const dateNow = new Date(Date.now());
-  const from = new Date(dateNow.getFullYear(), dateNow.getMonth() - 1, 1);
-  const to = new Date(dateNow.getFullYear(), dateNow.getMonth(), 0);
-  return [dateFormat(from), dateFormat(to)];
-}
-
-function getDateRangeFromUrl(): [string, string] {
-  const matched = window.location.pathname.match("from/(?<from>....-..-..)/to/(?<to>(....-..-..))");
-  if (!matched?.groups?.["from"] || !matched?.groups?.["to"]) {
-    console.warn("Date not found in URL. Date range set to last month.");
-    return getDateRagePreviousMonth();
-  }
-  return [matched.groups["from"], matched?.groups["to"]];
-}
-
-function formatDate(date: Date) {
-  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-}
-
-function getDateRange(mode: "custom" | "thisMonth" | "prevMonth"): [string, string] {
-  switch (mode) {
-    case "custom":
-      return getDateRangeFromUrl();
-    case "thisMonth":
-      return getDateRageThisMonth();
-    case "prevMonth":
-      return getDateRagePreviousMonth();
-    default:
-      return getDateRagePreviousMonth();
-  }
-}
-
-function getWorkspaceId(): string {
-  const url = window.location.pathname;
+function getWorkspaceId(tabUrl: URL): string {
+  const url = tabUrl.pathname;
   let rest = url.replace("https://", "");
 
   rest = rest.substring(rest.indexOf("/") + 1); //odstranění stránky
@@ -345,38 +285,40 @@ function getWorkspaceId(): string {
   return id;
 }
 
-function getApiToken(location?: ConfigApiKeyLocation) {
-  const locationKey = location?.key ?? "/api/v9/me";
-  const locationStorage = location?.storage ?? "session";
-  const locationPropertyName = location?.propertyName ?? "api_token";
-
-  const storage = locationStorage === "session" ? sessionStorage : localStorage;
-  const me = JSON.parse(storage.getItem(locationKey) ?? "null");
-  return me?.[locationPropertyName];
-}
-
-(async function () {
-  const config = await getConfigFromStorageAsync();
-  const [from, to] = getDateRange(config.dateMode);
-  const workspaceId = getWorkspaceId();
-  if (!workspaceId) {
-    console.warn("Workspace not found!");
+export async function createReport(tab: chrome.tabs.Tab, config: Config) {
+  if (!tab.id) {
+    console.warn("Tab id not found!");
     return;
   }
 
-  const apiToken = getApiToken(config.apiKeyLocation);
+  setCurrentTabId(tab.id);
+  if (!tab.url) {
+    logInTargetTab("Tab url not found!", "warn");
+    return;
+  }
+
+  const url = new URL(tab.url ?? "");
+  const [from, to] = getDateRange(url);
+
+  const workspaceId = getWorkspaceId(url);
+  if (!workspaceId) {
+    logInTargetTab("Workspace not found!", "warn");
+    return;
+  }
+
+  const apiToken = await getApiToken(config.apiKeyLocation);
   if (!apiToken) {
-    console.warn("Api token not found!");
+    logInTargetTab("Api token not found!", "warn");
     return;
   }
 
   const authHeader = `Basic ${btoa(`${apiToken}:api_token`)}`;
-
   const projects = await getProjectsAsync(workspaceId, authHeader);
   const data = await getDataAsync(from, to, authHeader);
+
   const processedData = processData(data, projects);
 
   const groupedData = groupData(processedData);
   const filteredData = filterData(groupedData, config);
   createReports(filteredData, config);
-})();
+}
