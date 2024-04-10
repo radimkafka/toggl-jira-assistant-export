@@ -35,6 +35,12 @@ jobs:
           echo "Manifest.json version has not been updated."
           exit 1
 
+      - name: manifest.json and package.json versions must match
+        if: steps.manifest-check.outputs.version != steps.package-check.outputs.version
+        run: |
+          echo "Version mismatch between package.json and manifest.json."
+          exit 1
+
       - name: Set up Node
         uses: actions/setup-node@v3
         with:
