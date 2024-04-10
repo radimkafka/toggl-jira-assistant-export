@@ -19,9 +19,9 @@ jobs:
 
       - name: package.json version check failed
         if: steps.package-check.outputs.changed == 'false'
-         run: |
+        run: |
           echo "Package.json version has not been updated."
-          exit 1          
+          exit 1
 
       - name: manifest.json  version check
         id: manifest-check
@@ -31,7 +31,7 @@ jobs:
 
       - name: manifest.json version check failed
         if: steps.manifest-check.outputs.changed == 'false'
-         run: |
+        run: |
           echo "Manifest.json version has not been updated."
           exit 1
 
