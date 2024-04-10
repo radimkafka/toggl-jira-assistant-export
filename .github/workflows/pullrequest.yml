@@ -11,6 +11,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: package.json version check
+        id: package-check
+        uses: EndBug/version-check@v2
+        with:
+          file-name: ./package.json
+
+      - name: package.json version check failed
+        if: steps.package-check.outputs.changed == 'false'
+        run: |
+          echo "Package.json version has not been updated."
+          exit 1
+
+      - name: manifest.json  version check
+        id: manifest-check
+        uses: EndBug/version-check@v2
+        with:
+          file-name: ./public/manifest.json
+
+      - name: manifest.json version check failed
+        if: steps.manifest-check.outputs.changed == 'false'
+        run: |
+          echo "Manifest.json version has not been updated."
+          exit 1
+
+      - name: manifest.json and package.json versions must match
+        if: steps.manifest-check.outputs.version != steps.package-check.outputs.version
+        run: |
+          echo "Version mismatch between package.json and manifest.json."
+          exit 1
+
       - name: Set up Node
         uses: actions/setup-node@v3
         with:
