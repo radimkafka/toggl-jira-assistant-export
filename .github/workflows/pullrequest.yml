@@ -11,16 +11,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: package.json version check edit
-        id: package-check
-        uses: EndBug/version-check@v2
-
-      - name: package.json version check failed
-        if: steps.package-check.outputs.changed == 'false'
-        run: |
-          echo "Package.json version has not been updated. ${{ steps.package-check.outputs.version }} ${{ steps.package-check.outputs.type }}"
-          exit 1
-
       - name: manifest.json  version check
         id: manifest-check
         uses: EndBug/version-check@v2
@@ -31,6 +21,16 @@ jobs:
         if: steps.manifest-check.outputs.changed == 'false'
         run: |
           echo "Manifest.json version has not been updated."
+          exit 1
+
+      - name: package.json version check edit
+        id: package-check
+        uses: EndBug/version-check@v2
+
+      - name: package.json version check failed
+        if: steps.package-check.outputs.changed == 'false'
+        run: |
+          echo "Package.json version has not been updated. version - ${{ steps.package-check.outputs.version }} type - ${{ steps.package-check.outputs.type }}"
           exit 1
 
       - name: manifest.json and package.json versions must match
