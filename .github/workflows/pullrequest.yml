@@ -18,7 +18,7 @@ jobs:
       - name: package.json version check failed
         if: steps.package-check.outputs.changed == 'false'
         run: |
-          echo "Package.json version has not been updated."
+          echo "Package.json version has not been updated. ${{ steps.package-check.outputs.version }} ${{ steps.package-check.outputs.type }}"
           exit 1
 
       - name: manifest.json  version check
