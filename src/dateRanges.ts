@@ -183,5 +183,5 @@ function subtractDays(date: Date, days: number) {
 }
 
 function formatDate(date: Date) {
-  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  return date.toISOString().substring(0, 10);
 }
