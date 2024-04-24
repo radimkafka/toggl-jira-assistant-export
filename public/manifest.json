@@ -2,7 +2,7 @@
   "name": "Toggl jira assistant export",
   "action": {},
   "manifest_version": 3,
-  "version": "2.0.2",
+  "version": "2.0.1",
   "description": "",
   "permissions": [
     "contextMenus",
