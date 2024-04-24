@@ -13,17 +13,17 @@ jobs:
 
       - name: package.json version check edit
         id: package-check
-        uses: EndBug/version-check@v2.1.4
+        uses: EndBug/version-check@v2.1.3
 
       - name: package.json version check failed
         if: steps.package-check.outputs.changed == 'false'
         run: |
-          echo "Package.json version has not been updated. version - ${{ steps.package-check.outputs.version }} type - ${{ steps.package-check.outputs.type }}"
+          echo "Package.json version has not been updated."
           exit 1
 
       - name: manifest.json  version check
         id: manifest-check
-        uses: EndBug/version-check@v2.1.4
+        uses: EndBug/version-check@v2.1.3
         with:
           file-name: ./public/manifest.json
 
