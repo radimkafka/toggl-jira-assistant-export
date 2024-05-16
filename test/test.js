@@ -193,7 +193,7 @@ function dateTest() {
     new Date("2024-04-29"),
     new Date("2024-04-30"),
   ].forEach(a => {
-    const [from, to] = getDateRangeFromUrl("/period/last30Days", a);
+    const [from, to] = getDateRangeFromUrl("/period/weekToDate", a);
     // console.log(from, to);
     console.log(`${formatDate(a)}: `, from, to);
   });
@@ -264,7 +264,30 @@ function getDateRangeFromUrl(type, initDate = new Date()) {
 
     const lastDayOfYear = new Date(today.getFullYear() - 1, 11, 31);
     return [formatDate(firstDayOfYear), formatDate(lastDayOfYear)];
+  } else if (type.endsWith("/period/weekToDate")) {
+    const today = new Date(initDate);
+    return getWeekToDateRange(today);
   }
+}
+
+function getWeekToDateRange(initDate) {
+  return [formatDate(getStartOfWeek(initDate)), formatDate(new Date(initDate))];
+}
+
+function getStartAndEndOfWeek(date) {
+  var startOfWeek = getStartOfWeek(date);
+
+  var endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(endOfWeek.getDate() + 6);
+
+  return [startOfWeek, endOfWeek];
+}
+
+function getStartOfWeek(date) {
+  var startOfWeek = new Date(date);
+  startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
+
+  return startOfWeek;
 }
 
 function getStartAndEndOfWeek(date) {

@@ -306,4 +306,5 @@ export type DateRangeType =
   | "last12Months"
   | "thisYear"
   | "prevYear"
-  | "custom";
+  | "custom"
+  | "weekToDate";

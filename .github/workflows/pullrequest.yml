@@ -13,9 +13,10 @@ jobs:
 
       - name: package.json version check
         id: package-check
-        uses: EndBug/version-check@v2.1.3
+        uses: EndBug/version-check@v2
         with:
           file-name: ./package.json
+          diff-search: true
 
       - name: package.json version check failed
         if: steps.package-check.outputs.changed == 'false'
@@ -25,9 +26,10 @@ jobs:
 
       - name: manifest.json  version check
         id: manifest-check
-        uses: EndBug/version-check@v2.1.3
+        uses: EndBug/version-check@v2
         with:
           file-name: ./public/manifest.json
+          diff-search: true
 
       - name: manifest.json version check failed
         if: steps.manifest-check.outputs.changed == 'false'
