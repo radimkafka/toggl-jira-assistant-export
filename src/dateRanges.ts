@@ -1,3 +1,4 @@
+import { logInTargetTab } from "./targetWindowUtils";
 import type { DateRangeType } from "./types";
 
 const customRangeRegex = /from\/(?<from>....-..-..)\/to\/(?<to>....-..-..)/;
@@ -30,6 +31,8 @@ export function getDateRange(url: URL, initDate = new Date()): [string, string] 
       return getThisYearRange(initDate);
     case "prevYear":
       return getPrevYearRange(initDate);
+    case "weekToDate":
+      return getWeekToDateRange(initDate);
   }
 
   throw new Error("Invalid date range type");
@@ -72,9 +75,12 @@ export function getDateRangeType(url: string): DateRangeType {
   if (url.endsWith("/period/prevYear")) {
     return "prevYear";
   }
+  if (url.endsWith("/period/weekToDate")) {
+    return "weekToDate";
+  }
 
   // todo log v consoli tabu
-  console.warn("Date range not found in URL. Date range set to last month.");
+  logInTargetTab("Date range not found in URL. Date range set to last month.", "error");
   return "prevMonth";
 }
 
@@ -166,14 +172,24 @@ function getPrevYearRange(initDate: Date): [string, string] {
   return [formatDate(firstDayOfYear), formatDate(lastDayOfYear)];
 }
 
+function getWeekToDateRange(initDate: Date): [string, string] {
+  return [formatDate(getStartOfWeek(initDate)), formatDate(new Date(initDate))];
+}
+
 function getStartAndEndOfWeek(date: Date) {
-  var startOfWeek = new Date(date);
-  startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
+  var startOfWeek = getStartOfWeek(date);
 
   var endOfWeek = new Date(startOfWeek);
   endOfWeek.setDate(endOfWeek.getDate() + 6);
 
   return [startOfWeek, endOfWeek];
+}
+
+function getStartOfWeek(date: Date) {
+  var startOfWeek = new Date(date);
+  startOfWeek.setDate(startOfWeek.getDate() - ((startOfWeek.getDay() + 6) % 7));
+
+  return startOfWeek;
 }
 
 function subtractDays(date: Date, days: number) {
