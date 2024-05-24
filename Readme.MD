@@ -1,4 +1,25 @@
-# Config
+# Toggl jira assistant export
+
+Chrome extension to create csv report from [Toggl track](https://toggl.com/track/) to import into jira via [jira assistant](https://jiraassistant.com/)
+
+# Toggl settings
+
+Project has to be created in toggl. Project name must be same as the project name in Jira.
+
+### Toggl time entry format
+
+`Jira-issue-number`**;**`Jira time log description`**#**`Comment not imported to Jira`
+Only Jira-issue-number is required.
+
+#### Example
+
+Selected project: PRJ
+
+`123;Comment to jira#Example comment`
+
+When imported, time log in jira for issue `PRJ-123` with description 'Comment to jira' will be created.
+
+# Extension config
 
 ### Example
 
