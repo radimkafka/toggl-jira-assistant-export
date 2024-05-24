@@ -1,45 +1,10 @@
-export type TogglReportItem = {
-  id: number;
-  pid: number;
-  tid: number | null | undefined;
-  uid: number;
-  description: string;
-  start: string;
-  end: string;
-  updated: string;
-
-  /** doba v milisekundách */
-  dur: number;
-  user: string;
-  use_stop: boolean;
-  client: string | null | undefined;
-  project: string;
-  project_color: 0;
-  project_hex_color: string;
-  task: string | null | undefined;
-  billable: string | null | undefined;
-  is_billable: boolean;
-  cur: string | null | undefined;
-  tags: string[];
-};
-
-export type TogglResponse = {
-  data: TogglReportItem[];
-  activity: any[];
-  per_page: number;
-  total_billable: number | null;
-  total_count: number;
-  total_currencies: { currency: any; amount: any }[];
-  total_grand: number;
-};
-
 export type ReportItem = {
   project: string;
   projectName: string;
   projectNumber?: string;
   comment: string;
 
-  /** doba ve sekundách */
+  /** duratin in seconds */
   duration: number;
   date: string;
   commentItems: CommentItem[];
@@ -68,8 +33,6 @@ export type ConfigApiKeyLocation = {
   key: string;
   propertyName: string;
 };
-
-export type DateMode = "custom" | "thisMonth" | "prevMonth";
 
 export type Config = {
   roundDuration?: boolean;

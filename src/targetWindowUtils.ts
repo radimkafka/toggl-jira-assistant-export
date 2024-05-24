@@ -20,17 +20,17 @@ export function logInTargetTab(text: string, type: "info" | "warn" | "error" = "
   });
 }
 
-export async function fetchInTargetTab<T>(url: string, authHeader: string) {
+export async function fetchInTargetTab<T>(url: string, authHeader?: string) {
   if (!currentTabId) {
     throw new Error("currentTabId is not set");
   }
 
   const response = await chrome.scripting.executeScript({
     target: { tabId: currentTabId },
-    func: async (...args: string[]) => {
+    func: async (...args: [string, string | undefined]) => {
       const response = await fetch(args[0], {
         method: "GET",
-        headers: { Authorization: args[1] },
+        headers: args[1] ? { Authorization: args[1] } : undefined,
       });
       return (await response.json()) as T;
     },
