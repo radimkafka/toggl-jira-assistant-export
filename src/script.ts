@@ -8,11 +8,8 @@ import type {
   ReportData,
   ReportItem,
   ConfigFilterItem,
-  ConfigApiKeyLocation,
   TimeEntry,
   Project,
-  DateMode,
-  DateRangeType,
 } from "./types";
 
 function processData(data: TimeEntry[], projects: Project[]): ReportItem[] {
@@ -44,8 +41,7 @@ function createReportItem(timeEntry: TimeEntry, projects: Project[]): ReportItem
 }
 
 /**
- * Spáruje záznamy se stejným dnem, projektem a komentářem
- * @param data
+ * Merges records with the same day, project, and comment
  */
 function groupData(data: ReportItem[]): GroupedReportItem[] {
   const records: GroupedReportItem[] = [];
@@ -141,16 +137,12 @@ function getReportContent(data: ReportData[], config: Config) {
   return output;
 }
 
-/**
- *
- * @param comment
- */
 function parseComment(comment: string) {
   let commentRest = comment;
   const commentItems = [];
   let index = 0;
   do {
-    index = findSeparatorIndex(commentRest.slice(1, commentRest.length));
+    index = findFirstSeparatorIndex(commentRest.slice(1, commentRest.length));
     if (index === -1) {
       commentItems.push(getCommentItem(commentRest));
       break;
@@ -162,11 +154,7 @@ function parseComment(comment: string) {
   return commentItems;
 }
 
-/**
- * Najde první index oddělovače
- * @param data
- */
-function findSeparatorIndex(data: string) {
+function findFirstSeparatorIndex(data: string) {
   if (!data) return -1;
   const separators = [";", "#"];
   return (
@@ -178,10 +166,6 @@ function findSeparatorIndex(data: string) {
   );
 }
 
-/**
- * Vytvoří Description Item
- * @param value
- */
 function getCommentItem(value: string): CommentItem {
   let type: CommentItemType = "unknown";
   if (value?.length > 0) {
@@ -206,7 +190,7 @@ function getCommentItem(value: string): CommentItem {
 
 /**
  *
- * @param duration dobra v sekundách
+ * @param duration duration in seconds
  * @param includeSeconds
  */
 function timeFormat(duration: number, includeSeconds?: boolean) {
@@ -224,7 +208,7 @@ function stringifyWorklog({ project, comment, duration, date }: ReportData, incl
   return `${project};${date};${timeFormat(duration, includeSeconds)};${comment}`;
 }
 
-async function getDataAsync(dateFrom: string, dateTo: string, authHeader: string): Promise<TimeEntry[]> {
+async function getDataAsync(dateFrom: string, dateTo: string, authHeader?: string): Promise<TimeEntry[]> {
   const dateTimeFrom = `${dateFrom}T00:00:00.000Z`;
   const dateTimeTo = `${dateTo}T23:59:59.999Z`;
   const url = `https://track.toggl.com/api/v9/me/time_entries?start_date=${dateTimeFrom}&end_date=${dateTimeTo}`;
@@ -232,7 +216,7 @@ async function getDataAsync(dateFrom: string, dateTo: string, authHeader: string
   return response ?? [];
 }
 
-async function getProjectsAsync(workspaceId: string, authHeader: string): Promise<Project[]> {
+async function getProjectsAsync(workspaceId: string, authHeader?: string): Promise<Project[]> {
   const url = `https://track.toggl.com/api/v9/workspaces/${workspaceId}/projects`;
   const response = await fetchInTargetTab<Project[]>(url, authHeader);
   return response ?? [];
@@ -268,21 +252,11 @@ function getWorkspaceId(tabUrl: URL): string {
   const url = tabUrl.pathname;
   let rest = url.replace("https://", "");
 
-  rest = rest.substring(rest.indexOf("/") + 1); //odstranění stránky
-  rest = rest.substring(rest.indexOf("/") + 1); //odstranění reports
-  rest = rest.substring(rest.indexOf("/") + 1); //odstranění summary/detailed/weekly
+  rest = rest.substring(rest.indexOf("/") + 1); //removes website url (track.toggl.com/)
+  rest = rest.substring(rest.indexOf("/") + 1); //removes /reports
+  rest = rest.substring(rest.indexOf("/") + 1); //removes summary|detailed|weekly
 
-  let id = "";
-  //pokud je v url od do, tak obsahuje další lomítko, jinak ne
-  if (rest.indexOf("/") > 0) {
-    id = rest.substring(0, rest.indexOf("/"));
-    rest = rest.substring(rest.indexOf("/") + 1);
-  } else {
-    id = rest;
-    rest = "";
-  }
-
-  return id;
+  return rest.indexOf("/") > 0 ? rest.substring(0, rest.indexOf("/")) : rest;
 }
 
 export async function createReport(tab: chrome.tabs.Tab, config: Config) {
@@ -306,13 +280,16 @@ export async function createReport(tab: chrome.tabs.Tab, config: Config) {
     return;
   }
 
-  const apiToken = await getApiToken(config.apiKeyLocation);
-  if (!apiToken) {
-    logInTargetTab("Api token not found!", "warn");
-    return;
+  let apiToken: string | undefined;
+  if (config.apiKeyLocation) {
+    apiToken = await getApiToken(config.apiKeyLocation);
+    if (!apiToken) {
+      logInTargetTab("Api token not found!", "warn");
+      return;
+    }
   }
 
-  const authHeader = `Basic ${btoa(`${apiToken}:api_token`)}`;
+  const authHeader = apiToken ? `Basic ${btoa(`${apiToken}:api_token`)}` : undefined;
   const projects = await getProjectsAsync(workspaceId, authHeader);
   const data = await getDataAsync(from, to, authHeader);
 

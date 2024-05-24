@@ -38,7 +38,7 @@ export function getDateRange(url: URL, initDate = new Date()): [string, string] 
   throw new Error("Invalid date range type");
 }
 
-export function getDateRangeType(url: string): DateRangeType {
+function getDateRangeType(url: string): DateRangeType {
   if (customRangeRegex.test(url)) {
     return "custom";
   }
