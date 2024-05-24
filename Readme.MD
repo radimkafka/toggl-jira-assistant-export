@@ -1,6 +1,6 @@
 # Config
 
-### example
+### Example
 
 ```json
 {
