@@ -1,4 +1,3 @@
-import { logInTargetTab } from "./targetWindowUtils";
 import type { DateRangeType } from "./types";
 
 const customRangeRegex = /from\/(?<from>....-..-..)\/to\/(?<to>....-..-..)/;
@@ -78,10 +77,8 @@ function getDateRangeType(url: string): DateRangeType {
   if (url.endsWith("/period/weekToDate")) {
     return "weekToDate";
   }
-
-  // todo log v consoli tabu
-  logInTargetTab("Date range not found in URL. Date range set to last month.", "error");
-  return "prevMonth";
+  
+  throw new Error("Date range not found in URL.");
 }
 
 function getCustomRange(url: URL): [string, string] {

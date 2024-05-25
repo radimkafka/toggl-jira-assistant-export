@@ -1,5 +1,5 @@
 import { getDateRange } from "./dateRanges.js";
-import { download, fetchInTargetTab, getApiToken, logInTargetTab, setCurrentTabId } from "./targetWindowUtils.js";
+import { alertInTargetTab, download, fetchInTargetTab, getApiToken, setCurrentTabId } from "./targetWindowUtils.js";
 import type {
   Config,
   CommentItem,
@@ -264,38 +264,40 @@ export async function createReport(tab: chrome.tabs.Tab, config: Config) {
     console.warn("Tab id not found!");
     return;
   }
-
   setCurrentTabId(tab.id);
-  if (!tab.url) {
-    logInTargetTab("Tab url not found!", "warn");
-    return;
-  }
 
-  const url = new URL(tab.url ?? "");
-  const [from, to] = getDateRange(url);
-
-  const workspaceId = getWorkspaceId(url);
-  if (!workspaceId) {
-    logInTargetTab("Workspace not found!", "warn");
-    return;
-  }
-
-  let apiToken: string | undefined;
-  if (config.apiKeyLocation) {
-    apiToken = await getApiToken(config.apiKeyLocation);
-    if (!apiToken) {
-      logInTargetTab("Api token not found!", "warn");
-      return;
+  try {
+    if (!tab.url) {
+      throw new Error("Tab url not found!");
     }
+
+    const url = new URL(tab.url ?? "");
+    const [from, to] = getDateRange(url);
+
+    const workspaceId = getWorkspaceId(url);
+    if (!workspaceId) {
+      throw new Error("Workspace not found!");
+    }
+
+    let apiToken: string | undefined;
+    if (config.apiKeyLocation) {
+      apiToken = await getApiToken(config.apiKeyLocation);
+      if (!apiToken) {
+        throw new Error("Api token not found!");
+      }
+    }
+
+    const authHeader = apiToken ? `Basic ${btoa(`${apiToken}:api_token`)}` : undefined;
+    const projects = await getProjectsAsync(workspaceId, authHeader);
+    const data = await getDataAsync(from, to, authHeader);
+
+    const processedData = processData(data, projects);
+
+    const groupedData = groupData(processedData);
+    const filteredData = filterData(groupedData, config);
+    createReports(filteredData, config);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    alertInTargetTab(`Error: ${errorMessage}`);
   }
-
-  const authHeader = apiToken ? `Basic ${btoa(`${apiToken}:api_token`)}` : undefined;
-  const projects = await getProjectsAsync(workspaceId, authHeader);
-  const data = await getDataAsync(from, to, authHeader);
-
-  const processedData = processData(data, projects);
-
-  const groupedData = groupData(processedData);
-  const filteredData = filterData(groupedData, config);
-  createReports(filteredData, config);
 }
