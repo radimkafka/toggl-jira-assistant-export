@@ -299,5 +299,6 @@ export async function createReport(tab: chrome.tabs.Tab, config: Config) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     alertInTargetTab(`Error: ${errorMessage}`);
+    console.error(error);
   }
 }

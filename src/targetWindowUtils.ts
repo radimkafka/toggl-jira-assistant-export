@@ -26,14 +26,14 @@ export async function fetchInTargetTab<T>(url: string, authHeader?: string) {
 
   const response = await chrome.scripting.executeScript({
     target: { tabId: currentTabId },
-    func: async (...args: [string, string | undefined]) => {
+    func: async (...args: [string, string | null]) => {
       const response = await fetch(args[0], {
         method: "GET",
         headers: args[1] ? { Authorization: args[1] } : undefined,
       });
       return (await response.json()) as T;
     },
-    args: [url, authHeader],
+    args: [url, authHeader ?? null],
   });
   return response[0].result;
 }
