@@ -1,4 +1,4 @@
-import { ConfigApiKeyLocation } from "./types";
+import type { ConfigApiKeyLocation } from "./types";
 
 let currentTabId: number | undefined = undefined;
 
@@ -6,17 +6,16 @@ export function setCurrentTabId(tabId: number) {
   return (currentTabId = tabId);
 }
 
-export function logInTargetTab(text: string, type: "info" | "warn" | "error" = "info") {
+export function alertInTargetTab(text: string) {
   if (!currentTabId) {
     throw new Error("currentTabId is not set");
   }
-
   chrome.scripting.executeScript({
     target: { tabId: currentTabId },
-    func: async (...args: string[]) => {
-      console[args[0] as "info" | "warn" | "error"](args[1]);
+    func: async (...args: [string]) => {
+      alert(`toggl jira assistant export:\n${args[0]}`);
     },
-    args: [type, text],
+    args: [text],
   });
 }
 
