@@ -137,7 +137,7 @@ function getReportContent(data: ReportData[], config: Config) {
   return output;
 }
 
-function parseComment(comment: string) {
+export function parseComment(comment: string) {
   let commentRest = comment;
   const commentItems = [];
   let index = 0;
