@@ -17,22 +17,14 @@ const expectedValues = [
   },
 ] as const satisfies CommentItem[];
 
-test("Parse comment: 52;Test123", () => {
-  const data = parseComment("52;Test123");
-  expect(data).toEqual([expectedValues[0], expectedValues[1]]);
-});
+const rounding5minTestData: [string, CommentItem[]][] = [
+  ["52;Test123", [expectedValues[0], expectedValues[1]]],
+  ["52#Tag123", [expectedValues[0], expectedValues[2]]],
+  ["52;Test123#Tag123", [expectedValues[0], expectedValues[1], expectedValues[2]]],
+  ["52#Tag123;Test123", [expectedValues[0], expectedValues[2], expectedValues[1]]],
+  ["52;Test123;Test456", [expectedValues[0], expectedValues[1], { type: "Comment", value: "Test456" }]],
+];
 
-test("Parse comment: 52#Tag123", () => {
-  const data = parseComment("52#Tag123");
-  expect(data).toEqual([expectedValues[0], expectedValues[2]]);
-});
-
-test("Parse comment: 52;Test123#Tag123", () => {
-  const data = parseComment("52;Test123#Tag123");
-  expect(data).toEqual([expectedValues[0], expectedValues[1], expectedValues[2]]);
-});
-
-test("Parse comment: 52#Tag123;Test123", () => {
-  const data = parseComment("52#Tag123;Test123");
-  expect(data).toEqual([expectedValues[0], expectedValues[2], expectedValues[1]]);
+test.each(rounding5minTestData)("Parse comment: %s", (a, expected) => {
+  expect(parseComment(a)).toEqual(expected);
 });
