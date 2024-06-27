@@ -73,7 +73,7 @@ function filterData(data: GroupedReportItem[], config: Config): { name: string; 
 
   const updateTransformedName = (i: GroupedReportItem, a: ConfigFilterItem) => ({
     ...i,
-    project: a.transformations.find(t => t.sourceProjectName === i.projectName)!.destinationProject,
+    project: (a.transformations ?? []).find(t => t.sourceProjectName === i.projectName)!.destinationProject,
     comment: `${i.project} ${i.comment}`,
   });
 
