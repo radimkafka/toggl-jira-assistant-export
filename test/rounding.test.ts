@@ -1,26 +1,5 @@
 import { expect, test } from "vitest";
 import { roundDuration } from "../src/script";
-// function testRounding() {
-//     const getSecondsFromMinuts = minutes => minutes * 60;
-//     const getSeconds = _ => Math.floor(Math.random() * 60);
-//     const test = duration => {
-//       var rounded = roundDuration(duration);
-//       console.log(timeFormat(duration, true), timeFormat(rounded, true));
-//     };
-
-//     for (let i = 0; i <= 10; i++) {
-//       test(getSecondsFromMinuts(i) + getSeconds());
-//     }
-//     for (let i = 40; i < 50; i++) {
-//       test(getSecondsFromMinuts(i) + getSeconds());
-//     }
-//     console.log("_______");
-//     test(getSecondsFromMinuts(2) + 28);
-//     test(getSecondsFromMinuts(2) + 29);
-//     test(getSecondsFromMinuts(2) + 30);
-//     test(getSecondsFromMinuts(2) + 31);
-//     test(getSecondsFromMinuts(2) + 32);
-//   }
 
 const getSecondsFromMinuts = (minutes: number) => minutes * 60;
 
@@ -46,4 +25,16 @@ const rounding15minTestData = [
 
 test.each(rounding15minTestData)("round duration to 15min, %s", (a, expected) => {
   expect(roundDuration(a, 15)).toBe(expected);
+});
+
+const rounding20minTestData = [
+  [getSecondsFromMinuts(9) + 58, getSecondsFromMinuts(0)],
+  [getSecondsFromMinuts(9) + 59, getSecondsFromMinuts(0)],
+  [getSecondsFromMinuts(10) + 0, getSecondsFromMinuts(20)],
+  [getSecondsFromMinuts(10) + 1, getSecondsFromMinuts(20)],
+  [getSecondsFromMinuts(10) + 2, getSecondsFromMinuts(20)],
+];
+
+test.each(rounding20minTestData)("round duration to 20min, %s", (a, expected) => {
+  expect(roundDuration(a, 20)).toBe(expected);
 });
