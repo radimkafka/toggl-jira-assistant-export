@@ -11,6 +11,6 @@
         "types": ["chrome"],        
         "skipLibCheck": true,        
     },
-    "include": ["src/**/*","src/**/*.json", "src/test/date.test.ts"],
+    "include": ["src/**/*","src/**/*.json", "test/date.test.ts"],
     "exclude": ["node_modules", "dist","test"],    
 }
