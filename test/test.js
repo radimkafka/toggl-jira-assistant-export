@@ -25,10 +25,8 @@
 // };
 
 function test() {
-  testRounding();
   // testUpdateRecord();
   testGroupData();
-  testParsingDescription();
 
   return;
 }
@@ -232,9 +230,4 @@ function groupByDate(data) {
     }
   });
   return month;
-}
-
-function testParsingDescription() {
-  const data = createReportItem(testData[0]);
-  console.log("data: ", data);
 }
