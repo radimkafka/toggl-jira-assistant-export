@@ -235,7 +235,7 @@ function dateStringFormat(dateString: string) {
   return dateFormat(date);
 }
 
-function roundDuration(worklogItemDuration: number, roundToMinutes: number = 5): number {
+export function roundDuration(worklogItemDuration: number, roundToMinutes: number = 5): number {
   const roundToSeconds = 60 * roundToMinutes;
   const modulo = worklogItemDuration % roundToSeconds;
   let add = 0;

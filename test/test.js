@@ -26,7 +26,7 @@
 
 function test() {
   testRounding();
-  testUpdateRecord();
+  // testUpdateRecord();
   testGroupData();
   testParsingDescription();
 
@@ -52,28 +52,6 @@ function testFilterData() {
     console.table(a.items);
     console.log("_____");
   });
-}
-
-function testRounding() {
-  const getSecondsFromMinuts = minutes => minutes * 60;
-  const getSeconds = _ => Math.floor(Math.random() * 60);
-  const test = duration => {
-    var rounded = roundDuration(duration);
-    console.log(timeFormat(duration, true), timeFormat(rounded, true));
-  };
-
-  for (let i = 0; i <= 10; i++) {
-    test(getSecondsFromMinuts(i) + getSeconds());
-  }
-  for (let i = 40; i < 50; i++) {
-    test(getSecondsFromMinuts(i) + getSeconds());
-  }
-  console.log("_______");
-  test(getSecondsFromMinuts(2) + 28);
-  test(getSecondsFromMinuts(2) + 29);
-  test(getSecondsFromMinuts(2) + 30);
-  test(getSecondsFromMinuts(2) + 31);
-  test(getSecondsFromMinuts(2) + 32);
 }
 
 function testUpdateRecord() {
