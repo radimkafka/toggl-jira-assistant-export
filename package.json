@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "tsc && npm run copy-files && npm run copy-config",
+    "test": "vitest",
     "build": "tsc",
     "copy-files": "xcopy /E /I /D public dist",
     "copy-config": "xcopy /I /D test\\config.json dist"
@@ -25,5 +26,8 @@
   "dependencies": {
     "@types/chrome": "0.0.263",
     "typescript": "^5.4.3"
+  },
+  "devDependencies": {
+    "vitest": "^1.6.0"
   }
 }
