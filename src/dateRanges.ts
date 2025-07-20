@@ -153,15 +153,131 @@ function getStartOfWeek(date: Date) {
   return startOfWeek;
 }
 
-function getThisQuarterRange(date: Date): [string, string] {}
-function getThisSemesterRange(date: Date): [string, string] {}
-function getLast2WeeksRange(date: Date): [string, string] {}
-function getLastQuarterRange(date: Date): [string, string] {}
-function getLastSemesterRange(date: Date): [string, string] {}
-function getMonthToDateRange(date: Date): [string, string] {}
-function getQuarterToDateRange(date: Date): [string, string] {}
-function getSemesterToDateRange(date: Date): [string, string] {}
-function getYearToDateRange(date: Date): [string, string] {}
+function getThisQuarterRange(date: Date): [string, string] {
+  const currentMonth = date.getMonth();
+  const currentYear = date.getFullYear();
+
+  // Determine which quarter we're in (0-3)
+  const quarter = Math.floor(currentMonth / 3);
+
+  // Calculate start month of the quarter (0, 3, 6, 9)
+  const startMonth = quarter * 3;
+
+  // Calculate end month of the quarter (2, 5, 8, 11)
+  const endMonth = startMonth + 2;
+
+  const startDate = new Date(currentYear, startMonth, 1);
+  const endDate = new Date(currentYear, endMonth + 1, 0); // Last day of the month
+
+  return [formatDate(startDate), formatDate(endDate)];
+}
+
+function getThisSemesterRange(date: Date): [string, string] {
+  const currentMonth = date.getMonth();
+  const currentYear = date.getFullYear();
+
+  // Determine which semester we're in (0 or 1)
+  const semester = Math.floor(currentMonth / 6);
+
+  // Calculate start month of the semester (0 or 6)
+  const startMonth = semester * 6;
+
+  // Calculate end month of the semester (5 or 11)
+  const endMonth = startMonth + 5;
+
+  const startDate = new Date(currentYear, startMonth, 1);
+  const endDate = new Date(currentYear, endMonth + 1, 0); // Last day of the month
+
+  return [formatDate(startDate), formatDate(endDate)];
+}
+
+function getLast2WeeksRange(date: Date): [string, string] {
+  const twoWeeksAgo = subtractDays(date, 14);
+  return [formatDate(twoWeeksAgo), formatDate(date)];
+}
+
+function getLastQuarterRange(date: Date): [string, string] {
+  const currentMonth = date.getMonth();
+  const currentYear = date.getFullYear();
+
+  // Determine which quarter we're in (0-3)
+  const quarter = Math.floor(currentMonth / 3);
+
+  // Calculate start month of the previous quarter
+  const startMonth = ((quarter - 1 + 4) % 4) * 3; // Handle negative quarters
+  const startYear = quarter === 0 ? currentYear - 1 : currentYear;
+
+  // Calculate end month of the previous quarter
+  const endMonth = startMonth + 2;
+
+  const startDate = new Date(startYear, startMonth, 1);
+  const endDate = new Date(startYear, endMonth + 1, 0);
+
+  return [formatDate(startDate), formatDate(endDate)];
+}
+
+function getLastSemesterRange(date: Date): [string, string] {
+  const currentMonth = date.getMonth();
+  const currentYear = date.getFullYear();
+
+  // Determine which semester we're in (0 or 1)
+  const semester = Math.floor(currentMonth / 6);
+
+  // Calculate start month of the previous semester
+  const startMonth = ((semester - 1 + 2) % 2) * 6; // Handle negative semesters
+  const startYear = semester === 0 ? currentYear - 1 : currentYear;
+
+  // Calculate end month of the previous semester
+  const endMonth = startMonth + 5;
+
+  const startDate = new Date(startYear, startMonth, 1);
+  const endDate = new Date(startYear, endMonth + 1, 0);
+
+  return [formatDate(startDate), formatDate(endDate)];
+}
+
+function getMonthToDateRange(date: Date): [string, string] {
+  const firstDayOfMonth = new Date(date);
+  firstDayOfMonth.setDate(1);
+
+  return [formatDate(firstDayOfMonth), formatDate(date)];
+}
+
+function getQuarterToDateRange(date: Date): [string, string] {
+  const currentMonth = date.getMonth();
+  const currentYear = date.getFullYear();
+
+  // Determine which quarter we're in (0-3)
+  const quarter = Math.floor(currentMonth / 3);
+
+  // Calculate start month of the quarter (0, 3, 6, 9)
+  const startMonth = quarter * 3;
+
+  const startDate = new Date(currentYear, startMonth, 1);
+
+  return [formatDate(startDate), formatDate(date)];
+}
+
+function getSemesterToDateRange(date: Date): [string, string] {
+  const currentMonth = date.getMonth();
+  const currentYear = date.getFullYear();
+
+  // Determine which semester we're in (0 or 1)
+  const semester = Math.floor(currentMonth / 6);
+
+  // Calculate start month of the semester (0 or 6)
+  const startMonth = semester * 6;
+
+  const startDate = new Date(currentYear, startMonth, 1);
+
+  return [formatDate(startDate), formatDate(date)];
+}
+
+function getYearToDateRange(date: Date): [string, string] {
+  const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+
+  return [formatDate(firstDayOfYear), formatDate(date)];
+}
 
 function subtractDays(date: Date, days: number) {
   var result = new Date(date);
