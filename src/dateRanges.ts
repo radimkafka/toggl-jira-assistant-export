@@ -1,5 +1,5 @@
 import type { PreferenesDatePeriod } from "./types";
-import { isPreferenesDatePeriodFromTo } from "./validation";
+import { isPreferenesDatePeriodFromTo } from "./validation.js";
 
 export function getDateRange(preferences: PreferenesDatePeriod, initDate = new Date()): [string, string] {
   if (isPreferenesDatePeriodFromTo(preferences)) {
