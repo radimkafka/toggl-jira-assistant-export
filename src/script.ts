@@ -1,5 +1,12 @@
 import { getDateRange } from "./dateRanges.js";
-import { alertInTargetTab, download, fetchInTargetTab, getApiToken, setCurrentTabId } from "./targetWindowUtils.js";
+import {
+  alertInTargetTab,
+  download,
+  fetchInTargetTab,
+  getApiToken,
+  setCurrentTabId,
+  getCurrentTabId,
+} from "./targetWindowUtils.js";
 import type {
   Config,
   CommentItem,
@@ -10,7 +17,9 @@ import type {
   ConfigFilterItem,
   TimeEntry,
   Project,
+  PreferenesDatePeriod,
 } from "./types";
+import { isReportDescriptorSummaryPreferences } from "./validation.js";
 
 function processData(data: TimeEntry[], projects: Project[]): ReportItem[] {
   return data.map(a => createReportItem(a, projects));
@@ -77,7 +86,20 @@ function filterData(data: GroupedReportItem[], config: Config): { name: string; 
     comment: `${i.project} ${i.comment}`,
   });
 
-  return config.filter.map(a => {
+  let filter = config?.filter;
+
+  if (!filter) {
+    filter = [
+      {
+        filename: "time-sheet",
+        restAs: "",
+        includedProjects: [...new Set(data.map(a => a.projectName))],
+        transformations: [],
+      },
+    ];
+  }
+
+  return filter.map(a => {
     const transformedProjectNames = a.transformations?.map(a => a.sourceProjectName) ?? [];
 
     const grouped = data.reduce<{
@@ -248,18 +270,59 @@ function roundDuration(worklogItemDuration: number, roundToMinutes: number = 5):
   return rounded;
 }
 
-function getWorkspaceId(tabUrl: URL): string {
-  const url = tabUrl.pathname;
-  let rest = url.replace("https://", "");
+function getOrgIdWorkspaceId(url: string): [string, string] {
+  const orgIdMatch = url.match(/\/reports\/(\d+)\//);
+  if (!orgIdMatch) {
+    throw new Error("Org id not found in URL.");
+  }
 
-  rest = rest.substring(rest.indexOf("/") + 1); //removes website url (track.toggl.com/)
-  rest = rest.substring(rest.indexOf("/") + 1); //removes /reports
-  rest = rest.substring(rest.indexOf("/") + 1); //removes summary|detailed|weekly
+  const urlObj = new URL(url);
+  const workspaceId = urlObj.searchParams.get("wid");
+  if (!workspaceId) {
+    throw new Error("Workspace id not found in URL.");
+  }
 
-  return rest.indexOf("/") > 0 ? rest.substring(0, rest.indexOf("/")) : rest;
+  return [orgIdMatch[1], workspaceId];
 }
 
-export async function createReport(tab: chrome.tabs.Tab, config: Config) {
+async function getReportDescriptorSummaryPreferences(
+  orgId: string,
+  workspaceId: string
+): Promise<PreferenesDatePeriod> {
+  const currentTabId = getCurrentTabId();
+  if (!currentTabId) {
+    throw new Error("currentTabId is not set");
+  }
+
+  const response = await chrome.scripting.executeScript({
+    target: { tabId: currentTabId },
+    func: (...args: string[]) => {
+      const orgId = args[0];
+      const workspaceId = args[1];
+      const reportsDescriptor = localStorage.getItem(`reports-descriptor-${orgId}-${workspaceId}-summary`);
+      if (!reportsDescriptor) {
+        throw new Error(`Report descriptor not found in localStorage. orgId: ${orgId}, workspaceId: ${workspaceId}`);
+      }
+
+      const reportsDescriptorObj = JSON.parse(reportsDescriptor);
+      if (!reportsDescriptorObj.preferences) {
+        throw new Error("Report descriptor preferences not found in localStorage.");
+      }
+
+      return reportsDescriptorObj.preferences;
+    },
+    args: [orgId, workspaceId],
+  });
+
+  const preferences = response[0].result;
+  if (!isReportDescriptorSummaryPreferences(preferences)) {
+    throw new Error("Report descriptor preferences is not valid.");
+  }
+
+  return preferences.datePeriod;
+}
+
+export async function createReport(tab: chrome.tabs.Tab, config: Config = {}) {
   if (!tab.id) {
     console.warn("Tab id not found!");
     return;
@@ -271,13 +334,9 @@ export async function createReport(tab: chrome.tabs.Tab, config: Config) {
       throw new Error("Tab url not found!");
     }
 
-    const url = new URL(tab.url ?? "");
-    const [from, to] = getDateRange(url);
-
-    const workspaceId = getWorkspaceId(url);
-    if (!workspaceId) {
-      throw new Error("Workspace not found!");
-    }
+    const [orgId, workspaceId] = getOrgIdWorkspaceId(tab.url);
+    const preferences = await getReportDescriptorSummaryPreferences(orgId, workspaceId);
+    const [from, to] = getDateRange(preferences);
 
     let apiToken: string | undefined;
     if (config.apiKeyLocation) {

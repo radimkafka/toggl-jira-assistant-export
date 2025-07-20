@@ -7,9 +7,14 @@ async function onClick(info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.
 }
 
 async function GetConfig() {
-  var response = await fetch("./config.json");
-  var data = await response.json();
-  return data;
+  try {
+    var response = await fetch("./config.json");
+    var data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(error);
+    return undefined;
+  }
 }
 
 const contextItemMain: chrome.contextMenus.CreateProperties = {

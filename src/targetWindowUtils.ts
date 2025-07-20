@@ -2,6 +2,10 @@ import type { ConfigApiKeyLocation } from "./types";
 
 let currentTabId: number | undefined = undefined;
 
+export function getCurrentTabId(): number | undefined {
+  return currentTabId;
+}
+
 export function setCurrentTabId(tabId: number) {
   return (currentTabId = tabId);
 }
