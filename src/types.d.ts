@@ -38,7 +38,7 @@ export type Config = {
   roundDuration?: boolean;
   roundToMinutes?: number;
   includeSeconds?: boolean;
-  filter: ConfigFilterItem[];
+  filter?: ConfigFilterItem[];
   apiKeyLocation?: ConfigApiKeyLocation;
 };
 
@@ -283,18 +283,18 @@ export type DateRangeType =
 export type ReportsDescriptorSummary = {
   preferences: {
     datePeriod: PreferenesDatePeriod;
-  }
+  };
 };
 
 export type ReportsDescriptorPreferences = {
   datePeriod: PreferenesDatePeriod;
-}
+};
 
 export type PreferenesDatePeriod = PreferenesDatePeriodPreset | PreferenesDatePeriodFromTo;
 
 export type PreferenesDatePeriodPreset = {
   preset: DateRangeType;
-}
+};
 
 export type PreferenesDatePeriodFromTo = {
   from: string;

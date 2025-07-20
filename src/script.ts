@@ -1,5 +1,12 @@
 import { getDateRange } from "./dateRanges.js";
-import { alertInTargetTab, download, fetchInTargetTab, getApiToken, setCurrentTabId } from "./targetWindowUtils.js";
+import {
+  alertInTargetTab,
+  download,
+  fetchInTargetTab,
+  getApiToken,
+  setCurrentTabId,
+  getCurrentTabId,
+} from "./targetWindowUtils.js";
 import type {
   Config,
   CommentItem,
@@ -79,7 +86,20 @@ function filterData(data: GroupedReportItem[], config: Config): { name: string; 
     comment: `${i.project} ${i.comment}`,
   });
 
-  return config.filter.map(a => {
+  let filter = config?.filter;
+
+  if (!filter) {
+    filter = [
+      {
+        filename: "time-sheet",
+        restAs: "",
+        includedProjects: [...new Set(data.map(a => a.projectName))],
+        transformations: [],
+      },
+    ];
+  }
+
+  return filter.map(a => {
     const transformedProjectNames = a.transformations?.map(a => a.sourceProjectName) ?? [];
 
     const grouped = data.reduce<{
@@ -265,18 +285,36 @@ function getOrgIdWorkspaceId(url: string): [string, string] {
   return [orgIdMatch[1], workspaceId];
 }
 
-function getReportDescriptorSummaryPreferences(orgId: string, workspaceId: string): PreferenesDatePeriod {
-  const reportsDescriptor = localStorage.getItem(`reports-descriptor-${orgId}-${workspaceId}-summary`);
-  if (!reportsDescriptor) {
-    throw new Error(`Report descriptor not found in localStorage. orgId: ${orgId}, workspaceId: ${workspaceId}`);
+async function getReportDescriptorSummaryPreferences(
+  orgId: string,
+  workspaceId: string
+): Promise<PreferenesDatePeriod> {
+  const currentTabId = getCurrentTabId();
+  if (!currentTabId) {
+    throw new Error("currentTabId is not set");
   }
 
-  const reportsDescriptorObj = JSON.parse(reportsDescriptor);
-  if (!reportsDescriptorObj.preferences) {
-    throw new Error("Report descriptor preferences not found in localStorage.");
-  }
+  const response = await chrome.scripting.executeScript({
+    target: { tabId: currentTabId },
+    func: (...args: string[]) => {
+      const orgId = args[0];
+      const workspaceId = args[1];
+      const reportsDescriptor = localStorage.getItem(`reports-descriptor-${orgId}-${workspaceId}-summary`);
+      if (!reportsDescriptor) {
+        throw new Error(`Report descriptor not found in localStorage. orgId: ${orgId}, workspaceId: ${workspaceId}`);
+      }
 
-  const preferences = reportsDescriptorObj.preferences;
+      const reportsDescriptorObj = JSON.parse(reportsDescriptor);
+      if (!reportsDescriptorObj.preferences) {
+        throw new Error("Report descriptor preferences not found in localStorage.");
+      }
+
+      return reportsDescriptorObj.preferences;
+    },
+    args: [orgId, workspaceId],
+  });
+
+  const preferences = response[0].result;
   if (!isReportDescriptorSummaryPreferences(preferences)) {
     throw new Error("Report descriptor preferences is not valid.");
   }
@@ -284,7 +322,7 @@ function getReportDescriptorSummaryPreferences(orgId: string, workspaceId: strin
   return preferences.datePeriod;
 }
 
-export async function createReport(tab: chrome.tabs.Tab, config: Config) {
+export async function createReport(tab: chrome.tabs.Tab, config: Config = {}) {
   if (!tab.id) {
     console.warn("Tab id not found!");
     return;
@@ -297,7 +335,7 @@ export async function createReport(tab: chrome.tabs.Tab, config: Config) {
     }
 
     const [orgId, workspaceId] = getOrgIdWorkspaceId(tab.url);
-    const preferences = getReportDescriptorSummaryPreferences(orgId, workspaceId);
+    const preferences = await getReportDescriptorSummaryPreferences(orgId, workspaceId);
     const [from, to] = getDateRange(preferences);
 
     let apiToken: string | undefined;
