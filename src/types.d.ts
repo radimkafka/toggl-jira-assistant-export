@@ -261,13 +261,42 @@ export type DateRangeType =
   | "today"
   | "yesterday"
   | "thisWeek"
-  | "prevWeek"
   | "thisMonth"
+  | "thisQuarter"
+  | "thisSemester"
+  | "thisYear"
+  | "prevWeek"
+  | "last2Weeks"
   | "prevMonth"
   | "last30Days"
   | "last90Days"
+  | "lastQuarter"
+  | "lastSemester"
   | "last12Months"
-  | "thisYear"
   | "prevYear"
-  | "custom"
-  | "weekToDate";
+  | "weekToDate"
+  | "monthToDate"
+  | "quarterToDate"
+  | "semesterToDate"
+  | "yearToDate";
+
+export type ReportsDescriptorSummary = {
+  preferences: {
+    datePeriod: PreferenesDatePeriod;
+  }
+};
+
+export type ReportsDescriptorPreferences = {
+  datePeriod: PreferenesDatePeriod;
+}
+
+export type PreferenesDatePeriod = PreferenesDatePeriodPreset | PreferenesDatePeriodFromTo;
+
+export type PreferenesDatePeriodPreset = {
+  preset: DateRangeType;
+}
+
+export type PreferenesDatePeriodFromTo = {
+  from: string;
+  to: string;
+};

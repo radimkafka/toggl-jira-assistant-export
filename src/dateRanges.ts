@@ -1,93 +1,57 @@
-import type { DateRangeType } from "./types";
+import type { PreferenesDatePeriod } from "./types";
+import { isPreferenesDatePeriodFromTo } from "./validation";
 
-const customRangeRegex = /from\/(?<from>....-..-..)\/to\/(?<to>....-..-..)/;
+export function getDateRange(preferences: PreferenesDatePeriod, initDate = new Date()): [string, string] {
+  if (isPreferenesDatePeriodFromTo(preferences)) {
+    return [preferences.from, preferences.to];
+  }
 
-export function getDateRange(url: URL, initDate = new Date()): [string, string] {
-  const rangeType = getDateRangeType(url.pathname);
-
-  switch (rangeType) {
-    case "custom":
-      return getCustomRange(url);
+  switch (preferences.preset) {
     case "today":
       return getTodayRange(initDate);
     case "yesterday":
       return getYesterdayRange(initDate);
     case "thisWeek":
       return getThisWeekRange(initDate);
-    case "prevWeek":
-      return getPrevWeekRange(initDate);
     case "thisMonth":
       return getThisMonthRange(initDate);
+    case "thisQuarter":
+      return getThisQuarterRange(initDate);
+    case "thisSemester":
+      return getThisSemesterRange(initDate);
+    case "thisYear":
+      return getThisYearRange(initDate);
+    case "prevWeek":
+      return getPrevWeekRange(initDate);
+    case "last2Weeks":
+      return getLast2WeeksRange(initDate);
     case "prevMonth":
       return getPrevMonthRange(initDate);
     case "last30Days":
       return getLast30DaysRange(initDate);
     case "last90Days":
       return getLast90DaysRange(initDate);
+    case "lastQuarter":
+      return getLastQuarterRange(initDate);
+    case "lastSemester":
+      return getLastSemesterRange(initDate);
     case "last12Months":
       return getLast12MonthsRange(initDate);
-    case "thisYear":
-      return getThisYearRange(initDate);
     case "prevYear":
       return getPrevYearRange(initDate);
     case "weekToDate":
       return getWeekToDateRange(initDate);
+    case "monthToDate":
+      return getMonthToDateRange(initDate);
+    case "quarterToDate":
+      return getQuarterToDateRange(initDate);
+    case "semesterToDate":
+      return getSemesterToDateRange(initDate);
+    case "yearToDate":
+      return getYearToDateRange(initDate);
   }
 
   throw new Error("Invalid date range type");
-}
-
-function getDateRangeType(url: string): DateRangeType {
-  if (customRangeRegex.test(url)) {
-    return "custom";
-  }
-  if (url.endsWith("/period/today")) {
-    return "today";
-  }
-  if (url.endsWith("/period/yesterday")) {
-    return "yesterday";
-  }
-  if (url.endsWith("/period/thisWeek")) {
-    return "thisWeek";
-  }
-  if (url.endsWith("/period/prevWeek")) {
-    return "prevWeek";
-  }
-  if (url.endsWith("/period/thisMonth")) {
-    return "thisMonth";
-  }
-  if (url.endsWith("/period/prevMonth")) {
-    return "prevMonth";
-  }
-  if (url.endsWith("/period/last30Days")) {
-    return "last30Days";
-  }
-  if (url.endsWith("/period/last90Days")) {
-    return "last90Days";
-  }
-  if (url.endsWith("/period/last12Months")) {
-    return "last12Months";
-  }
-  if (url.endsWith("/period/thisYear")) {
-    return "thisYear";
-  }
-  if (url.endsWith("/period/prevYear")) {
-    return "prevYear";
-  }
-  if (url.endsWith("/period/weekToDate")) {
-    return "weekToDate";
-  }
-  
-  throw new Error("Date range not found in URL.");
-}
-
-function getCustomRange(url: URL): [string, string] {
-  const matched = url.pathname.match(customRangeRegex);
-  if (matched?.groups?.["from"] && matched?.groups?.["to"]) {
-    return [matched.groups["from"], matched?.groups["to"]];
-  }
-
-  throw new Error("Invalid custom date range URL");
 }
 
 function getTodayRange(initDate: Date): [string, string] {
@@ -188,6 +152,16 @@ function getStartOfWeek(date: Date) {
 
   return startOfWeek;
 }
+
+function getThisQuarterRange(date: Date): [string, string] {}
+function getThisSemesterRange(date: Date): [string, string] {}
+function getLast2WeeksRange(date: Date): [string, string] {}
+function getLastQuarterRange(date: Date): [string, string] {}
+function getLastSemesterRange(date: Date): [string, string] {}
+function getMonthToDateRange(date: Date): [string, string] {}
+function getQuarterToDateRange(date: Date): [string, string] {}
+function getSemesterToDateRange(date: Date): [string, string] {}
+function getYearToDateRange(date: Date): [string, string] {}
 
 function subtractDays(date: Date, days: number) {
   var result = new Date(date);

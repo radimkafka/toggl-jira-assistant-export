@@ -10,7 +10,9 @@ import type {
   ConfigFilterItem,
   TimeEntry,
   Project,
+  PreferenesDatePeriod,
 } from "./types";
+import { isReportDescriptorSummaryPreferences } from "./validation.js";
 
 function processData(data: TimeEntry[], projects: Project[]): ReportItem[] {
   return data.map(a => createReportItem(a, projects));
@@ -248,15 +250,38 @@ function roundDuration(worklogItemDuration: number, roundToMinutes: number = 5):
   return rounded;
 }
 
-function getWorkspaceId(tabUrl: URL): string {
-  const url = tabUrl.pathname;
-  let rest = url.replace("https://", "");
+function getOrgIdWorkspaceId(url: string): [string, string] {
+  const orgIdMatch = url.match(/\/reports\/(\d+)\//);
+  if (!orgIdMatch) {
+    throw new Error("Org id not found in URL.");
+  }
 
-  rest = rest.substring(rest.indexOf("/") + 1); //removes website url (track.toggl.com/)
-  rest = rest.substring(rest.indexOf("/") + 1); //removes /reports
-  rest = rest.substring(rest.indexOf("/") + 1); //removes summary|detailed|weekly
+  const urlObj = new URL(url);
+  const workspaceId = urlObj.searchParams.get("wid");
+  if (!workspaceId) {
+    throw new Error("Workspace id not found in URL.");
+  }
 
-  return rest.indexOf("/") > 0 ? rest.substring(0, rest.indexOf("/")) : rest;
+  return [orgIdMatch[1], workspaceId];
+}
+
+function getReportDescriptorSummaryPreferences(orgId: string, workspaceId: string): PreferenesDatePeriod {
+  const reportsDescriptor = localStorage.getItem(`reports-descriptor-${orgId}-${workspaceId}-summary`);
+  if (!reportsDescriptor) {
+    throw new Error(`Report descriptor not found in localStorage. orgId: ${orgId}, workspaceId: ${workspaceId}`);
+  }
+
+  const reportsDescriptorObj = JSON.parse(reportsDescriptor);
+  if (!reportsDescriptorObj.preferences) {
+    throw new Error("Report descriptor preferences not found in localStorage.");
+  }
+
+  const preferences = reportsDescriptorObj.preferences;
+  if (!isReportDescriptorSummaryPreferences(preferences)) {
+    throw new Error("Report descriptor preferences is not valid.");
+  }
+
+  return preferences.datePeriod;
 }
 
 export async function createReport(tab: chrome.tabs.Tab, config: Config) {
@@ -271,13 +296,9 @@ export async function createReport(tab: chrome.tabs.Tab, config: Config) {
       throw new Error("Tab url not found!");
     }
 
-    const url = new URL(tab.url ?? "");
-    const [from, to] = getDateRange(url);
-
-    const workspaceId = getWorkspaceId(url);
-    if (!workspaceId) {
-      throw new Error("Workspace not found!");
-    }
+    const [orgId, workspaceId] = getOrgIdWorkspaceId(tab.url);
+    const preferences = getReportDescriptorSummaryPreferences(orgId, workspaceId);
+    const [from, to] = getDateRange(preferences);
 
     let apiToken: string | undefined;
     if (config.apiKeyLocation) {
