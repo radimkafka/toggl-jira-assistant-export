@@ -82,7 +82,7 @@ function filterData(data: GroupedReportItem[], config: Config): { name: string; 
 
   const updateTransformedName = (i: GroupedReportItem, a: ConfigFilterItem) => ({
     ...i,
-    project: a.transformations.find(t => t.sourceProjectName === i.projectName)!.destinationProject,
+    project: (a.transformations ?? []).find(t => t.sourceProjectName === i.projectName)!.destinationProject,
     comment: `${i.project} ${i.comment}`,
   });
 
@@ -159,7 +159,7 @@ function getReportContent(data: ReportData[], config: Config) {
   return output;
 }
 
-function parseComment(comment: string) {
+export function parseComment(comment: string) {
   let commentRest = comment;
   const commentItems = [];
   let index = 0;
@@ -257,7 +257,7 @@ function dateStringFormat(dateString: string) {
   return dateFormat(date);
 }
 
-function roundDuration(worklogItemDuration: number, roundToMinutes: number = 5): number {
+export function roundDuration(worklogItemDuration: number, roundToMinutes: number = 5): number {
   const roundToSeconds = 60 * roundToMinutes;
   const modulo = worklogItemDuration % roundToSeconds;
   let add = 0;

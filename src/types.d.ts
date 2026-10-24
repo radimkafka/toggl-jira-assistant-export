@@ -46,7 +46,7 @@ export type ConfigFilterItem = {
   filename: string;
   restAs: string;
   includedProjects: string[];
-  transformations: ConfigTransfromationItem[];
+  transformations?: ConfigTransfromationItem[];
 };
 
 export type ConfigTransfromationItem = {
