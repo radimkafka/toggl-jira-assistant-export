@@ -16,5 +16,5 @@ const testData: [Date, [string, string]][] = [
 ];
 
 test.each(testData)("weekToData, %s", (a, expected) => {
-  expect(getDateRange(new URL("/period/weekToDate", "https://www.toggl.com"), a)).toStrictEqual(expected);
+  expect(getDateRange({ preset: "weekToDate" }, a)).toStrictEqual(expected);
 });
